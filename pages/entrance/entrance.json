@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "精确选择入口",
+  "navigationBarBackgroundColor": "#1f2937",
+  "navigationBarTextStyle": "white",
   "usingComponents": {}
 }

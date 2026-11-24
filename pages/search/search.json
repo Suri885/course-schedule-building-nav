@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "教室查询",
+  "navigationBarBackgroundColor": "#1f2937",
+  "navigationBarTextStyle": "white",
   "usingComponents": {}
 }

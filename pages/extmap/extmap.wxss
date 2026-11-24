@@ -1,4 +1,8 @@
 /* pages/extmap/extmap.wxss */
+page {
+  background: #0f172a;
+  color: #e5e7eb;
+}
 .ext-wrap {
   padding: 24rpx;
   display: flex;

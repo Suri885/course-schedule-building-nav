@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "三维导航",
+  "navigationBarBackgroundColor": "#1f2937",
+  "navigationBarTextStyle": "white",
   "usingComponents": {},
   "disableScroll": true
 }

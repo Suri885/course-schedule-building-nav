@@ -1,4 +1,8 @@
 /* pages/search/search.wxss */
+page {
+  background: #0f172a;
+  color: #e5e7eb;
+}
 .sr-wrap {
   padding: 32rpx;
   display: flex;
