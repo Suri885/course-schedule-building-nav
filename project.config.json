@@ -1,7 +1,12 @@
 {
   "description": "课程表工作台 + 教学楼内部三维导航（合并版）",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "folder", "value": "floorplan3d" },
+      { "type": "file", "value": "feasibility.md" },
+      { "type": "file", "value": "overview.md" },
+      { "type": "file", "value": "README.md" }
+    ],
     "include": []
   },
   "setting": {
@@ -48,7 +53,7 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "3.3.4",
+  "libVersion": "3.17.1",
   "appid": "wxe2bd5c3d69229c75",
   "projectname": "course-schedule-building-nav",
   "condition": {},
