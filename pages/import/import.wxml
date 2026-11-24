@@ -1,0 +1,74 @@
+<!--pages/import/import.wxml - 智能统一导入课表-->
+<view class="import-page">
+
+  <view class="imp-title">智能统一导入</view>
+  <view class="tip">上传一张课表照片，系统会自动识别课程名、星期、节次并生成课表。
+    <view wx:if="{{!ocrEnabled}}" class="imp-note">本机未开启云端识别：选图后请在下方粘贴/输入课表文字（或点「示例」）。</view>
+  </view>
+
+  <!-- 上传区 -->
+  <view class="photo-pick" bindtap="onChooseImage">
+    <image wx:if="{{imagePath}}" src="{{imagePath}}" mode="aspectFit" class="photo-img"></image>
+    <view wx:else class="photo-placeholder">
+      <text class="photo-plus">＋</text>
+      <text class="photo-text">📷 拍照 / 从相册选择课表照片</text>
+    </view>
+  </view>
+
+  <view wx:if="{{imagePath && imageHint}}" class="photo-hint">{{imageHint}}</view>
+
+  <!-- 文字输入（识别后校正 / 离线手动输入） -->
+  <block wx:if="{{showText}}">
+    <textarea
+      class="text-area"
+      placeholder="在此粘贴或输入课表文字…"
+      value="{{textValue}}"
+      bindinput="onTextInput"
+      maxlength="-1"
+    ></textarea>
+    <view class="fill-link" bindtap="onFillSample">📋 没有照片？一键填入示例课表</view>
+    <view class="parse-btn" bindtap="onParseTap">🔍 解析课表</view>
+  </block>
+
+  <!-- 云端识别后，若想手动校正，可切换 -->
+  <view wx:if="{{imagePath && ocrEnabled && !showText}}" class="fill-link" bindtap="onToggleManual">✏️ 识别不准？改用文字手动核对</view>
+
+  <!-- ============ 解析结果预览 ============ -->
+  <block wx:if="{{parsed}}">
+    <view class="result-head">已识别 {{candidates.length}} 条 · 勾选无误后生成课表</view>
+
+    <view class="cand-card" wx:for="{{candidates}}" wx:key="idx">
+      <view class="cand-top">
+        <view class="cand-check {{item.checked?'on':''}}" data-i="{{index}}" catchtap="toggleCand">{{item.checked?'✓':'○'}}</view>
+        <input class="cand-name" placeholder="课程名" value="{{item.name}}" data-i="{{index}}" bindinput="onCandName"/>
+      </view>
+
+      <view class="cand-week">🗓 {{item.weeksText}}</view>
+
+      <view wx:if="{{item.needAdjust}}" class="cand-warn">⚠ 未能自动识别时间，请在下方选择节次</view>
+
+      <view class="cand-row">
+        <input class="cand-input" placeholder="教师" value="{{item.teacher}}" data-i="{{index}}" bindinput="onCandTeacher"/>
+        <input class="cand-input" placeholder="教室" value="{{item.location}}" data-i="{{index}}" bindinput="onCandLocation"/>
+      </view>
+
+      <view class="cand-row">
+        <picker mode="selector" range="{{dayLabels}}" value="{{item.dayIndex}}" data-i="{{index}}" bindchange="onCandDay">
+          <view class="cand-pick"><text class="cand-pick-label">星期</text><text class="cand-pick-val">{{dayLabels[item.dayIndex]}}</text></view>
+        </picker>
+        <picker mode="selector" range="{{slotLabels}}" value="{{item.startPeriodIndex}}" data-i="{{index}}" bindchange="onCandStart">
+          <view class="cand-pick"><text class="cand-pick-label">起</text><text class="cand-pick-val">{{slotLabels[item.startPeriodIndex]}}</text></view>
+        </picker>
+        <picker mode="selector" range="{{slotLabels}}" value="{{item.endPeriodIndex}}" data-i="{{index}}" bindchange="onCandEnd">
+          <view class="cand-pick"><text class="cand-pick-label">止</text><text class="cand-pick-val">{{slotLabels[item.endPeriodIndex]}}</text></view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="import-btn" bindtap="onImport">＋ 生成课表（{{checkedCount}} 门）</view>
+  </block>
+
+  <!-- 底部固定提示 -->
+  <view class="bottom-fixed">拍照课表在北化实践教学综合服务平台——实验教学管理——学期课表</view>
+  <view class="bottom-space"></view>
+</view>

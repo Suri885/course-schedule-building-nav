@@ -1,0 +1,41 @@
+<!--pages/second-class/second-class.wxml - 五大板块列表-->
+<view class="sc-bg">
+  <view class="sc-intro">
+    <text class="sc-intro-title">第二课堂成绩评定</text>
+    <text class="sc-intro-sub">办法满分 600 分 · 基础占 80% · 拓展占 20%</text>
+    <view class="sc-intro-sum">
+      <text class="sc-intro-got">已得 {{totalGot}} / {{totalTarget}} 分</text>
+      <text class="sc-intro-remain">还差 {{totalRemain}} 分</text>
+    </view>
+    <text class="sc-intro-pending" wx:if="{{totalPending > 0}}">另有 {{totalPending}} 分待确认，确认后计入</text>
+  </view>
+
+  <view class="sc-list">
+    <view
+      class="sc-card"
+      wx:for="{{list}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="goDetail"
+      style="border-left-color: {{item.color}};"
+    >
+      <view class="sc-card-top">
+        <view class="sc-badge" style="background: {{item.color}};">{{item.short}}</view>
+        <view class="sc-card-main">
+          <text class="sc-card-name">{{item.name}}</text>
+          <text class="sc-card-desc">{{item.desc}}</text>
+        </view>
+        <text class="sc-card-arrow">›</text>
+      </view>
+
+      <view class="sc-progress">
+        <view class="sc-progress-bar" style="width: {{item.pct}}%; background: {{item.color}};"></view>
+      </view>
+      <view class="sc-card-foot">
+        <text class="sc-card-score">已得 {{item.got}} / {{item.max}} 分</text>
+        <text class="sc-card-remain">还差 {{item.remain}}</text>
+        <text class="sc-card-count">{{item.taskCount}} 项任务</text>
+      </view>
+    </view>
+  </view>
+</view>

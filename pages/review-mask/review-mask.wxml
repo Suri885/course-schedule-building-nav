@@ -1,0 +1,62 @@
+<!--pages/review-mask/review-mask.wxml - 图片涂抹遮盖-->
+<view class="rm-bg">
+
+  <view class="rm-tip">
+    <text class="rm-tip-txt">单指涂抹（白色即遮盖），双指捏合放大后再涂可以涂得更细；放大后单指仍是涂抹，用下面按钮或「适应屏幕」调整视野。</text>
+  </view>
+
+  <view class="rm-canvas-wrap" wx:if="{{loaded}}">
+    <canvas
+      canvas-id="maskCanvas"
+      class="rm-canvas"
+      style="width:{{cw}}px;height:{{ch}}px;"
+      disable-scroll="true"
+      bindtouchstart="onTouchStart"
+      bindtouchmove="onTouchMove"
+      bindtouchend="onTouchEnd"
+      bindtouchcancel="onTouchEnd"
+    ></canvas>
+  </view>
+  <view class="rm-loading" wx:else>
+    <text class="rm-loading-txt">图片加载中…</text>
+  </view>
+
+  <view class="rm-tools">
+    <view class="rm-brush-row">
+      <text class="rm-tool-label">笔刷</text>
+      <view
+        class="rm-brush {{brush === item.size ? 'rm-brush-on' : ''}}"
+        wx:for="{{brushList}}"
+        wx:key="size"
+        data-size="{{item.size}}"
+        bindtap="changeBrush"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="rm-zoom-row">
+      <text class="rm-tool-label">缩放</text>
+      <view class="rm-zoom-btn" bindtap="zoomOut">
+        <text class="rm-zoom-txt">－</text>
+      </view>
+      <text class="rm-zoom-val">{{zoomText}}</text>
+      <view class="rm-zoom-btn" bindtap="zoomIn">
+        <text class="rm-zoom-txt">＋</text>
+      </view>
+      <view class="rm-zoom-reset" bindtap="resetZoom">
+        <text class="rm-zoom-reset-txt">适应屏幕</text>
+      </view>
+    </view>
+
+    <view class="rm-btn-row">
+      <view class="rm-btn" bindtap="undo">
+        <text class="rm-btn-txt">撤销</text>
+      </view>
+      <view class="rm-btn" bindtap="clearAll">
+        <text class="rm-btn-txt">全部重涂</text>
+      </view>
+      <view class="rm-btn rm-btn-primary" bindtap="save">
+        <text class="rm-btn-txt rm-btn-txt-primary">保存遮盖图</text>
+      </view>
+    </view>
+  </view>
+</view>

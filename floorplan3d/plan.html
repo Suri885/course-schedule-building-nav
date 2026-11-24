@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第二教学楼 3 层 · 俯视平面图（C 座 + D 座）</title>
+<style>
+  html,body{margin:0;background:#f4f6f8;color:#23292f;
+    font:14px/1.7 -apple-system,"Microsoft YaHei","PingFang SC",sans-serif;}
+  .wrap{max-width:1960px;margin:0 auto;padding:22px 20px 60px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .sub{color:#6b7684;font-size:12.5px;margin-bottom:16px;}
+  .card{background:#fff;border:1px solid #e2e6ea;border-radius:10px;padding:14px;margin-bottom:18px;
+        box-shadow:0 1px 3px rgba(20,28,38,.05);}
+  canvas{display:block;width:100%;height:auto;border:1px solid #e6eaee;border-radius:6px;background:#fff;}
+  .leg{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px;font-size:12.5px;color:#5b6673;}
+  .leg span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:18px;height:13px;border:1px solid #98a2ac;border-radius:2px;display:inline-block;}
+  .cols{display:flex;gap:18px;flex-wrap:wrap;}
+  .cols>div{flex:1 1 460px;min-width:340px;}
+  h2{font-size:15px;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid #eceff2;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th,td{border-bottom:1px solid #eef1f4;padding:5px 7px;text-align:left;white-space:nowrap;}
+  th{background:#fafbfc;color:#5b6673;font-weight:600;}
+  td.n{font-variant-numeric:tabular-nums;color:#4a5560;}
+  .tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:11.5px;}
+  .t-class{background:#eef2f6;color:#2b3742;}
+  .t-wc{background:#e8f1f8;color:#1f4d78;}
+  .t-stair{background:#eceff2;color:#37424c;}
+  .t-lift{background:#eceff2;color:#37424c;}
+  .t-aux{background:#f6f2ea;color:#6b5a3a;}
+  .t-exit{background:#e9f4ec;color:#0f7a3d;}
+  .note{font-size:12px;color:#6b7684;margin-top:10px;line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>北京化工大学 · 昌平校区第二教学楼 3 层 · 俯视平面图</h1>
+  <div class="sub">上为北 · 依《C座3层疏散平面图》《D座3层疏散平面图》逐间核对 · C 座地面较 D 座高 0.9m，由连廊起坡连通</div>
+  <div style="margin:12px 0 4px">
+    <a href="floor3.html" style="display:inline-block;padding:9px 16px;border-radius:8px;
+       background:#1f4d78;color:#fff;text-decoration:none;font-weight:600;font-size:14px;">
+      ▶ 打开三维漫游（可走动的那份）
+    </a>
+  </div>
+
+  <div class="card">
+    <canvas id="cv" width="1920" height="1000"></canvas>
+    <div class="leg">
+      <span><i class="sw" style="background:#cfdcea"></i>公共走廊（可走）</span>
+      <span><i class="sw" style="background:#c6dcf1"></i>C↔D 连廊</span>
+      <span><i class="sw" style="background:#fff"></i>教室 / 阶梯教室</span>
+      <span><i class="sw" style="background:#eef4f9"></i>卫生间</span>
+      <span><i class="sw" style="background:#f0f2f4"></i>楼梯间 · 电梯</span>
+      <span><i class="sw" style="background:#fbf8f2"></i>设备 / 辅助用房</span>
+      <span><b style="color:#0f7a3d">绿色文字</b>＝原图安全出口标识</span>
+      <span><b style="color:#1b2026">粗黑线</b>＝建筑外墙（不可穿）</span>
+      <span><b style="color:#98a2ac">细灰线</b>＝室内隔墙</span>
+      <span><i class="sw" style="background:#f6f7f9;border-color:#c9d0d8"></i>空地 / 上空（走不进去）</span>
+      <span>墙上白色缺口＋斜线＝门</span>
+      <span><b style="color:#2f6394">斜边</b>＝建筑不是方正矩形</span>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>D 座 · 逐间对照表</h2>
+      <div id="tblD"></div>
+    </div>
+    <div class="card">
+      <h2>C 座 · 逐间对照表</h2>
+      <div id="tblC"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>核对说明</h2>
+    <div class="note">
+      1. <b>两座楼都不是方正矩形</b>：D 座是「锯齿台阶状」——北边 3 部楼梯（楼梯①②③）与东端空调机房、2 部电梯向北凸出，南边 D阶-202 / D阶-201 与东段逐级错落；C 座是「阶梯斜边梯形」——西侧 4 段、东北角 1 段 35° 斜边。<br>
+      2. D 座北排为 D-307 → D-301，嵌三处楼梯；西列为 D-308 / D-309 / D-310，D-312 位于中南部，D3 教师休息室位于 D-313 南侧、东纵廊西侧。<br>
+      3. <b>D 座东端（从 C 座走过来的落脚处）</b>：电梯①/② <b>并排贴在北端、门朝南</b>，正前方留出一大块<b>电梯厅空地</b>（实景里的那片大理石地面），南接北横廊；空调机房在电梯西侧，机房再往西是<b>强电间 / 弱电间</b>两小格，都开门朝走廊。<br>
+      4. <b>D 座卫生间不是「并排三间」</b>：四处（D-311 东侧、D-313 东侧、D-314 东侧、西南 D-310 东南）统一成「卫 ｜ 前室（小空地）｜ 卫」——<b>前室一通到底、男女卫的门开在前室两侧且正对</b>，和实景照片一致；<b>男女卫中间不再放残卫</b>，残卫单独在三小间那排（开水间 → 残卫 → 强电间）。前三组女卫在西、男卫在东；西南那组按原图是男卫在西、女卫在东，前室从南横廊北上。四组都能从走廊直接走进前室。<br>
+      5. C 座西北是一大块上空凹口（灰斜纹）；<b>绿色虚线是原图的疏散通道，只有它走得到的地方才可通行</b>。核心筒自西向东是：空调机房（仅 2.2 m 宽的窄条）→ 出口楼梯 → 电梯①②（中间横向电梯厅，可走）→ 强弱电间 → C3 教师休息室。<br>
+      6. C 座核心筒明确画出 <b>电梯① / 电梯②</b>（对角 × 标记）与电梯厅；东列为 C-301 / C-302 / C-303 / C3 教师休息室，C阶-201 已按原图收小到 13.7 × 11.7 m。<br>
+      7. 落进斜边里的房间（男卫、女卫、消防强电间）与门厅走廊都按斜线截短，不会穿出外墙；每间房的门都开向公共走廊或前室。<br>
+      8. 房间标签按宽高自动缩放；狭窄设备间采用竖排，阶梯教室分两行。模型尺寸按照片比例估算，不能替代测绘尺寸。<br>
+      9. <b>方向对照</b>：这张俯视图「上＝北」，站在 D-301 面朝 D-307（向西）时<b>右手边是北排教室</b>，左手边才是卫生间、其他教室和通道。三维漫游里的朝向与这张图一致（俯仰、左右都没有镜像）。<br>
+      10. <b>D-314 西侧是一条南北向走廊</b>（不是房间）：北端从北横廊拐进来，一路向南穿过 D3 教师休息室东侧、D阶-201 东侧，南端是<b>安全出口</b>。走廊西墙上依次是<b>开水间 → 残卫 → 强电间</b>三小间，门都朝东开向这条走廊——按实景照片，它们是从走廊拐进去的，<b>不是排着面朝教室</b>。<br>
+      11. <b>C/D 两座之间现在有两条连廊</b>：<b>连廊 A</b> 在 D 座东端（北横廊东端，电梯厅以南）接 C 座北廊「通往D座」口；<b>连廊 B</b> 从 D-314 西侧走廊南端的安全出口出楼，向东接 C 座 <b>C阶-202 西北的安全出口楼梯</b>，进门后是一条小通道，向南接 C 座西横廊。两条连廊都是「平段 + 进 C 座前 3.2 m 起坡 0 → 0.9 m」，两侧带护栏。<br>
+      12. <b>D-312 出口楼梯与 D阶-202 旁的安全出口是同一个疏散节点</b>：楼梯口朝南正对一条东西向走廊（夹在 D阶-202 北墙与 D-312 之间），这条廊往东顶到 D阶-201 西墙，再北上接 D阶-201 西廊，然后沿北廊到 D3 教师休息室东侧的安全出口。<b>所以「男女卫 → D阶-202 旁 → D阶-201 → D3 教师休息室 → 安全出口 → 连廊」整条路是通的</b>，D阶-201 不会再被空地封住。
+    </div>
+  </div>
+</div>
+
+<script src="plan-data.js"></script>
+<script>
+(function () {
+  var F = window.FLOOR3;
+  var cv = document.getElementById('cv');
+  F.render(cv.getContext('2d'), cv.width, cv.height, { pad: 16, fullLabels: true });
+
+  var TYPE = { class: '教室', stair: '楼梯间', lift: '电梯', wc: '卫生间', aux: '辅助用房', exit: '安全出口' };
+  var DOOR = { N: '北（朝北横廊/南横廊）', S: '南', W: '西（朝纵廊）', E: '东（朝纵廊）' };
+
+  function table(rooms, isC) {
+    var ox = isC ? F.CX : 0, oz = isC ? F.CZ : 0;
+    var h = '<table><thead><tr><th>名称</th><th>类型</th><th>局部位置 x , z</th><th>尺寸 宽×深</th><th>门朝向</th></tr></thead><tbody>';
+    rooms.forEach(function (r) {
+      var t = r[5], cls = 't-' + t;
+      h += '<tr><td><b>' + r[0] + '</b></td>'
+         + '<td><span class="tag ' + cls + '">' + (TYPE[t] || t) + '</span></td>'
+         + '<td class="n">' + r[1 - 0].toFixed(1).replace('.0', '') + ' , ' + r[2 - 0].toFixed(1).replace('.0', '') + '</td>'
+         + '<td class="n">' + r[3] + ' × ' + r[4] + '</td>'
+         + '<td class="n">' + (DOOR[r[6]] || r[6] || '—') + '</td></tr>';
+    });
+    return h + '</tbody></table>';
+  }
+  document.getElementById('tblD').innerHTML = table(F.D_ROOMS, false);
+  var cRows = F.C_ROOMS.map(function (r) { return [r[0], r[1] - F.CX, r[2] - F.CZ, r[3], r[4], r[5], r[6], r[7]]; });
+  (F.C_POLY || []).forEach(function (p) {
+    var xs = p[1].map(function (q) { return q[0] - F.CX; });
+    var zs = p[1].map(function (q) { return q[1] - F.CZ; });
+    cRows.push([p[0] + '（斜边）', Math.min.apply(null, xs), Math.min.apply(null, zs),
+                (Math.max.apply(null, xs) - Math.min.apply(null, xs)).toFixed(1),
+                (Math.max.apply(null, zs) - Math.min.apply(null, zs)).toFixed(1), 'stair', 'W', p[0]]);
+  });
+  document.getElementById('tblC').innerHTML = table(cRows, false);
+})();
+</script>
+</body>
+</html>

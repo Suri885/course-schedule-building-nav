@@ -1,0 +1,70 @@
+<!--pages/section-detail/section-detail.wxml - 板块详情：先呈现基础/拓展两个模块-->
+<view class="sd-bg" wx:if="{{section}}">
+
+  <!-- 板块总进度 -->
+  <view class="sd-head" style="background: {{section.color}};">
+    <text class="sd-head-name">{{section.name}}</text>
+    <text class="sd-head-desc">{{section.desc}}</text>
+    <view class="sd-head-score">
+      <text class="sd-head-got">{{totalGot}}</text>
+      <text class="sd-head-max"> / {{totalMax}} 分</text>
+    </view>
+    <view class="sd-head-bar">
+      <view class="sd-head-bar-in" style="width: {{totalMax ? (totalGot/totalMax*100 > 100 ? 100 : totalGot/totalMax*100) : 0}}%;"></view>
+    </view>
+    <view class="sd-head-foot">
+      <text class="sd-head-remain">还差 {{totalRemain}} 分</text>
+      <text class="sd-head-pending" wx:if="{{totalPending > 0}}">待确认 +{{totalPending}} 分</text>
+    </view>
+  </view>
+
+  <view class="sd-hint">
+    <text class="sd-hint-text">先选择下方模块，再进入查看每一条任务</text>
+  </view>
+
+  <!-- 基础评定 模块卡 -->
+  <view class="mod-card" style="border-left-color: {{section.color}};" data-type="basic" bindtap="goModule">
+    <view class="mod-top">
+      <view class="mod-left">
+        <text class="mod-title">基础评定</text>
+        <text class="mod-sub">必达成的基础项</text>
+      </view>
+      <text class="mod-arrow">进入 ›</text>
+    </view>
+    <view class="mod-score">
+      <text class="mod-got">{{basicGot}}</text>
+      <text class="mod-max"> / {{basicMax}} 分</text>
+      <text class="mod-remain" wx:if="{{basicRemain > 0}}">还差 {{basicRemain}}</text>
+    </view>
+    <view class="mod-bar">
+      <view class="mod-bar-in" style="width: {{basicMax ? (basicGot/basicMax*100 > 100 ? 100 : basicGot/basicMax*100) : 0}}%; background: {{section.color}};"></view>
+    </view>
+  </view>
+
+  <!-- 拓展评定 模块卡 -->
+  <view class="mod-card" style="border-left-color: {{section.color}};" data-type="ext" bindtap="goModule">
+    <view class="mod-top">
+      <view class="mod-left">
+        <text class="mod-title">拓展评定</text>
+        <text class="mod-sub">争取加分的拓展项</text>
+      </view>
+      <text class="mod-arrow">进入 ›</text>
+    </view>
+    <view class="mod-score">
+      <text class="mod-got">{{extGot}}</text>
+      <text class="mod-max"> / {{extMax}} 分</text>
+      <text class="mod-remain" wx:if="{{extRemain > 0}}">还差 {{extRemain}}</text>
+    </view>
+    <view class="mod-bar">
+      <view class="mod-bar-in" style="width: {{extMax ? (extGot/extMax*100 > 100 ? 100 : extGot/extMax*100) : 0}}%; background: {{section.color}};"></view>
+    </view>
+  </view>
+
+  <view class="sd-note">
+    <text class="sd-note-txt">本板块满分 {{officialTotal}} 分 = 基础 {{section.basicMax}} 分 + 拓展 {{section.extMax}} 分；各任务细则得分累计超出部分不重复计入，按板块满分封顶。</text>
+  </view>
+
+  <view class="sd-bottom-tip">
+    <text class="sd-bottom-text">点「基础评定」或「拓展评定」进入对应任务列表；每条任务可写记录并按「加分记录」登记得分，像记账一样逐笔累加。</text>
+  </view>
+</view>

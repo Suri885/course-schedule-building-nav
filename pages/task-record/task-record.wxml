@@ -1,0 +1,169 @@
+<!--pages/task-record/task-record.wxml - 任务详情：详细评分标注 + 记账式加分记录-->
+<view class="tr-bg" wx:if="{{task}}">
+
+  <!-- 任务头 -->
+  <view class="tr-head" style="border-left-color: {{section.color}};">
+    <view class="tr-head-main">
+      <text class="tr-title">{{task.title}}</text>
+      <text class="tr-sub">{{section.name}} · 本项上限 {{cap}} 分</text>
+    </view>
+    <view class="tr-head-score">
+      <text class="tr-head-got">{{got}}</text>
+      <text class="tr-head-cap">/{{cap}}</text>
+    </view>
+  </view>
+
+  <!-- 状态条：已确认得分 / 待确认 / 还差 -->
+  <view class="tr-status">
+    <view class="tr-status-cell">
+      <text class="tr-status-num">{{got}}</text>
+      <text class="tr-status-label">已确认</text>
+    </view>
+    <view class="tr-status-cell">
+      <text class="tr-status-num tr-status-pending">{{pending}}</text>
+      <text class="tr-status-label">待确认</text>
+    </view>
+    <view class="tr-status-cell">
+      <text class="tr-status-num tr-status-remain">{{remain}}</text>
+      <text class="tr-status-label">还差</text>
+    </view>
+  </view>
+
+  <!-- 主要任务内容（首屏简述） -->
+  <view class="tr-box">
+    <text class="tr-box-label">任务内容</text>
+    <text class="tr-box-text">{{task.content}}</text>
+  </view>
+
+  <!-- 详细评分标注 -->
+  <view class="tr-box">
+    <text class="tr-box-label">评分标注（详细）</text>
+    <text class="tr-box-text tr-criteria">{{task.criteria}}</text>
+
+    <!-- 分值表（结构化表格） -->
+    <view class="tr-table" wx:if="{{task.criteriaTable}}">
+      <text class="tr-table-cap">{{task.criteriaTable.caption}}</text>
+      <view class="tr-table-grid">
+        <view class="tr-tr tr-tr-head">
+          <view
+            class="tr-td {{thIndex === 0 ? 'tr-td-first' : ''}}"
+            wx:for="{{task.criteriaTable.headers}}"
+            wx:key="thIndex"
+            wx:for-item="h"
+            wx:for-index="thIndex"
+          >{{h}}</view>
+        </view>
+        <view
+          class="tr-tr"
+          wx:for="{{task.criteriaTable.rows}}"
+          wx:key="rowIndex"
+          wx:for-item="row"
+          wx:for-index="rowIndex"
+        >
+          <view
+            class="tr-td {{tdIndex === 0 ? 'tr-td-first' : ''}}"
+            wx:for="{{row.cells}}"
+            wx:key="tdIndex"
+            wx:for-item="cell"
+            wx:for-index="tdIndex"
+          >{{cell}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新建加分记录（像记账一样填入本次加分） -->
+  <view class="tr-form">
+    <text class="tr-form-title">新建记录</text>
+    <textarea
+      class="tr-textarea"
+      placeholder="记录完成情况、心得体会或凭证说明…"
+      value="{{newText}}"
+      bindinput="onTextInput"
+      maxlength="500"
+    />
+
+    <view class="tr-img-row">
+      <view class="tr-img-add" bindtap="chooseImage">
+        <text class="tr-img-add-icon">＋</text>
+        <text class="tr-img-add-text">图片</text>
+      </view>
+      <view class="tr-img-item" wx:for="{{newImages}}" wx:key="*this" wx:for-item="img">
+        <image class="tr-img" src="{{img}}" mode="aspectFill" data-url="{{img}}" data-images="{{newImages}}" bindtap="previewImage" />
+        <view class="tr-img-del" data-index="{{index}}" catchtap="removeImage">×</view>
+      </view>
+    </view>
+
+    <!-- 加分记录填写 -->
+    <view class="tr-score-row">
+      <text class="tr-score-label">本次加分</text>
+      <input
+        class="tr-score-input"
+        type="digit"
+        placeholder="填本次加分数，如 10"
+        value="{{newScore}}"
+        bindinput="onScoreInput"
+        maxlength="4"
+      />
+      <text class="tr-score-unit">分</text>
+    </view>
+
+    <view class="tr-save" bindtap="saveRecord">
+      <text class="tr-save-text">保存记录（先记为待确认）</text>
+    </view>
+    <text class="tr-form-hint">记录只是本人登记；在学校正式系统申请通过后，回到本页点「确认加分」才计入得分。</text>
+  </view>
+
+  <!-- 历史记录（记账流水：每条显示 +X 分） -->
+  <view class="tr-list-title">
+    <text class="tr-list-title-text">加分记录（{{records.length}} 笔）</text>
+  </view>
+
+  <view wx:if="{{records.length === 0}}" class="tr-empty">
+    <text class="tr-empty-text">还没有记录，添加第一条并登记加分吧</text>
+  </view>
+
+  <view class="tr-record {{rec.ok ? '' : 'tr-record-unconf'}}" wx:for="{{records}}" wx:key="id" wx:for-item="rec">
+    <view class="tr-record-top">
+      <view class="tr-record-tags">
+        <text class="tr-tag {{rec.ok ? 'tr-tag-ok' : 'tr-tag-pending'}}">{{rec.ok ? '已确认加分' : '待确认'}}</text>
+        <text class="tr-record-time">{{rec.time}}</text>
+      </view>
+      <text class="tr-record-del" data-id="{{rec.id}}" bindtap="deleteRecord">删除</text>
+    </view>
+    <text class="tr-record-text" wx:if="{{rec.text}}">{{rec.text}}</text>
+    <view class="tr-record-imgs" wx:if="{{rec.images.length > 0}}">
+      <image
+        class="tr-record-img"
+        wx:for="{{rec.images}}"
+        wx:key="*this"
+        wx:for-item="im"
+        src="{{im}}"
+        mode="aspectFill"
+        data-url="{{im}}"
+        data-images="{{rec.images}}"
+        bindtap="previewImage"
+      />
+    </view>
+
+    <!-- 记账标记 + 确认状态 -->
+    <view class="tr-record-foot">
+      <view class="tr-record-score" wx:if="{{rec.score > 0}}">
+        <text class="tr-record-score-text {{rec.ok ? '' : 'score-pending'}}">{{rec.ok ? '+' + rec.score : '待确认 +' + rec.score}} 分</text>
+      </view>
+      <view class="tr-confirm {{rec.ok ? 'tr-confirm-on' : ''}}" data-id="{{rec.id}}" catchtap="toggleConfirm">
+        <text class="tr-confirm-txt">{{rec.ok ? '已确认 · 点击撤销' : '确认加分'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 记录末尾：本任务累计 -->
+  <view class="tr-total" wx:if="{{records.length > 0}}">
+    <text class="tr-total-text">已确认</text>
+    <text class="tr-total-num">{{got}}</text>
+    <text class="tr-total-text">/ {{cap}} 分</text>
+    <text class="tr-total-pending" wx:if="{{pending > 0}}">另有 {{pending}} 分待确认</text>
+  </view>
+
+  <view class="tr-bottom-pad"></view>
+</view>

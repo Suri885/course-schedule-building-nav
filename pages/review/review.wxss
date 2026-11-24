@@ -1,0 +1,429 @@
+/* pages/review/review.wxss - 错题与背诵 */
+.rv-bg {
+  min-height: 100vh;
+  background: #f4f6fa;
+  padding: 24rpx 24rpx 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 550px) {
+  .rv-bg {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+}
+
+/* 顶部 */
+.rv-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 8rpx 8rpx 22rpx;
+}
+
+.rv-head-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.rv-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.rv-date {
+  font-size: 22rpx;
+  color: #8a97a8;
+  margin-top: 8rpx;
+}
+
+.rv-head-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(140deg, #4F86C6 0%, #185FA5 100%);
+  border-radius: 20rpx;
+  padding: 14rpx 26rpx;
+}
+
+.rv-stat-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.rv-stat-label {
+  font-size: 19rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4rpx;
+}
+
+/* 统计三格 */
+.rv-cards {
+  display: flex;
+  background: #ffffff;
+  border-radius: 22rpx;
+  padding: 24rpx 0;
+  box-shadow: 0 6rpx 20rpx rgba(31, 45, 61, 0.06);
+  margin-bottom: 24rpx;
+}
+
+.rv-mini {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 1rpx solid #f0f2f5;
+}
+
+.rv-mini:last-child {
+  border-right: none;
+}
+
+.rv-mini-num {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.rv-mini-accent {
+  color: #185FA5;
+}
+
+.rv-mini-label {
+  font-size: 20rpx;
+  color: #98a2b3;
+  margin-top: 6rpx;
+}
+
+/* 分段 */
+.rv-seg {
+  display: flex;
+  background: #eaedf2;
+  border-radius: 999rpx;
+  padding: 6rpx;
+  margin-bottom: 22rpx;
+}
+
+.rv-seg-item {
+  flex: 1;
+  height: 68rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  font-size: 27rpx;
+  color: #7b8794;
+}
+
+.rv-seg-on {
+  background: #ffffff;
+  color: #1f2d3d;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(31, 45, 61, 0.08);
+}
+
+.rv-seg-num {
+  font-size: 20rpx;
+  color: #98a2b3;
+  margin-left: 10rpx;
+  background: #eef1f6;
+  border-radius: 999rpx;
+  padding: 2rpx 12rpx;
+}
+
+.rv-seg-on .rv-seg-num {
+  color: #ffffff;
+  background: #185FA5;
+}
+
+/* 提示 */
+.rv-tip {
+  background: #EEF4FD;
+  border-radius: 16rpx;
+  padding: 16rpx 22rpx;
+  margin-bottom: 20rpx;
+}
+
+.rv-tip-txt {
+  font-size: 20rpx;
+  color: #4A6C93;
+  line-height: 1.6;
+}
+
+.rv-tip-link {
+  background: #EAF7EF;
+}
+
+.rv-tip-link .rv-tip-txt {
+  color: #2E9E5B;
+}
+
+/* 今日复习卡片 */
+.rv-card {
+  display: flex;
+  background: #ffffff;
+  border-radius: 22rpx;
+  padding: 22rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 6rpx 18rpx rgba(31, 45, 61, 0.06);
+}
+
+.rv-cover {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 14rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+  background: #eef1f6;
+}
+
+.rv-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rv-card-row1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.rv-card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1f2d3d;
+  flex: 1;
+  margin-right: 12rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rv-lib-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: #1f2d3d;
+  flex: 1;
+  margin-right: 12rpx;
+}
+
+.rv-badge {
+  font-size: 19rpx;
+  color: #185FA5;
+  background: #E6F1FB;
+  border-radius: 8rpx;
+  padding: 3rpx 12rpx;
+  flex-shrink: 0;
+}
+
+.rv-badge-red {
+  color: #ffffff;
+  background: #E5484D;
+}
+
+.rv-badge-ok {
+  color: #ffffff;
+  background: #2E9E5B;
+}
+
+.rv-card-sub {
+  margin-top: 10rpx;
+  font-size: 23rpx;
+  color: #6b7686;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.rv-card-foot {
+  margin-top: auto;
+  padding-top: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rv-card-type {
+  font-size: 20rpx;
+  color: #a5aebb;
+}
+
+.rv-card-go {
+  font-size: 22rpx;
+  color: #185FA5;
+  font-weight: 600;
+}
+
+/* 资料库 */
+.rv-search {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 999rpx;
+  padding: 0 24rpx;
+  height: 84rpx;
+  box-shadow: 0 4rpx 14rpx rgba(31, 45, 61, 0.05);
+}
+
+.rv-search-icon {
+  font-size: 26rpx;
+  margin-right: 12rpx;
+}
+
+.rv-search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: #1f2d3d;
+}
+
+.rv-search-clear {
+  font-size: 24rpx;
+  color: #a5aebb;
+  padding: 8rpx;
+}
+
+.rv-lib-count {
+  font-size: 21rpx;
+  color: #98a2b3;
+  padding: 16rpx 8rpx;
+}
+
+.rv-lib-item {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 22rpx;
+  padding: 22rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 4rpx 16rpx rgba(31, 45, 61, 0.05);
+}
+
+.rv-lib-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rv-lib-next {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  color: #8a97a8;
+}
+
+.rv-lib-ops {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.rv-op {
+  min-width: 96rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  background: #f2f4f7;
+  margin: 4rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rv-op-go {
+  background: #185FA5;
+}
+
+.rv-op-txt {
+  font-size: 21rpx;
+  color: #ffffff;
+}
+
+.rv-op-go .rv-op-txt {
+  color: #ffffff;
+}
+
+.rv-op-del {
+  color: #C0393D;
+}
+
+/* 加入复习计划 */
+.rv-op-add {
+  background: linear-gradient(140deg, #34B36F 0%, #2E9E5B 100%);
+}
+
+.rv-op-add .rv-op-txt {
+  color: #ffffff;
+  font-size: 19rpx;
+  white-space: nowrap;
+}
+
+.rv-badge-mute {
+  color: #8a97a8;
+  background: #eef1f6;
+}
+
+.rv-lib-next-mute {
+  color: #b6bfcc;
+}
+
+/* 空态 */
+.rv-empty {
+  background: #ffffff;
+  border-radius: 22rpx;
+  padding: 70rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rv-empty-emoji {
+  font-size: 56rpx;
+  margin-bottom: 20rpx;
+}
+
+.rv-empty-title {
+  font-size: 27rpx;
+  color: #667085;
+  margin-bottom: 12rpx;
+}
+
+.rv-empty-sub {
+  font-size: 21rpx;
+  color: #a5aebb;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.rv-pad {
+  height: 170rpx;
+}
+
+/* 新建按钮 */
+.rv-fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 70rpx;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #2E7BC4 0%, #185FA5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 28rpx rgba(24, 95, 165, 0.32);
+}
+
+.rv-fab-icon {
+  font-size: 56rpx;
+  color: #ffffff;
+  line-height: 1;
+  margin-top: -6rpx;
+}

@@ -1,0 +1,29 @@
+<!-- pages/search/search.wxml -->
+<view class="sr-wrap">
+  <view class="sr-tip">
+    输入教室号（如 305），系统将从你当前所在入口自动规划并展示通往该教室的三维路线，自动处理电梯、楼梯等垂直交通。
+  </view>
+
+  <view class="sr-status">
+    当前起点：<text class="sr-loc">{{hasLoc ? '已选择入口' : '尚未选择（请先选入口）'}}</text>
+  </view>
+
+  <view class="sr-input-row">
+    <input
+      class="sr-input"
+      type="number"
+      placeholder="输入教室号，如 305"
+      value="{{input}}"
+      bindinput="onInput"
+      confirm-type="search"
+      bindconfirm="onQuery" />
+    <button class="sr-btn" bindtap="onQuery">规划路线</button>
+  </view>
+
+  <view wx:if="{{err}}" class="sr-err">{{err}}</view>
+  <view wx:if="{{result}}" class="sr-ok">{{result}}</view>
+
+  <view class="sr-help">
+    编号规则：第一位是楼层（1–5），后两位是该层房间序号（01–10）。例如 305 = 3 层第 5 间。
+  </view>
+</view>

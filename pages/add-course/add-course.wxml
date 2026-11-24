@@ -1,0 +1,152 @@
+<!--pages/add-course/add-course.wxml - 添加课程表单-->
+<view class="form-page">
+
+  <!-- 批量添加模式提示 -->
+  <view class="batch-bar" wx:if="{{batch}}">
+    <view class="batch-left">
+      <text class="batch-title">批量添加课程</text>
+      <text class="batch-sub">保存后停留本页，可连续录入下一门；星期 / 节次 / 周次会保留</text>
+      <text class="batch-count">已添加 {{addedCount}} 门</text>
+    </view>
+    <view class="batch-done" bindtap="finishBatch">
+      <text class="batch-done-txt">完成</text>
+    </view>
+  </view>
+
+  <!-- 课程名称 -->
+  <view class="form-group">
+    <view class="form-label required">课程名称</view>
+    <input
+      class="form-input"
+      placeholder="如：高等数学"
+      value="{{name}}"
+      bindinput="onNameInput"
+      maxlength="20"
+    />
+  </view>
+
+  <!-- 实时冲突提示（时间 / 教师 / 教室） -->
+  <view class="conflict-banner" wx:if="{{conflicts.length > 0}}">
+    <text class="conflict-banner-title">⚠ 与已有安排冲突</text>
+    <text class="conflict-item" wx:for="{{conflicts}}" wx:for-item="cf" wx:key="key">{{cf.detail}}</text>
+  </view>
+
+  <!-- 教师和教室 -->
+  <view class="form-row">
+    <view class="form-group half">
+      <view class="form-label">教师</view>
+      <input
+        class="form-input"
+        placeholder="选填"
+        value="{{teacher}}"
+        bindinput="onTeacherInput"
+        maxlength="10"
+      />
+    </view>
+    <view class="form-group half">
+      <view class="form-label">教室</view>
+      <input
+        class="form-input"
+        placeholder="选填"
+        value="{{location}}"
+        bindinput="onLocationInput"
+        maxlength="20"
+      />
+    </view>
+  </view>
+
+  <!-- 时间设置卡片 -->
+  <view class="card">
+    <view class="card-title">上课时间</view>
+
+    <picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="onDayChange">
+      <view class="picker-item">
+        <text class="picker-label">星期</text>
+        <view class="picker-value">
+          <text>{{dayLabels[dayIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </view>
+    </picker>
+
+    <picker mode="selector" range="{{slotLabels}}" value="{{startPeriodIndex}}" bindchange="onStartPeriodChange">
+      <view class="picker-item">
+        <text class="picker-label">开始时段</text>
+        <view class="picker-value">
+          <text>{{slotLabels[startPeriodIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </view>
+    </picker>
+
+    <picker mode="selector" range="{{slotLabels}}" value="{{endPeriodIndex}}" bindchange="onEndPeriodChange">
+      <view class="picker-item">
+        <text class="picker-label">结束时段</text>
+        <view class="picker-value">
+          <text>{{slotLabels[endPeriodIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 周次设置卡片 -->
+  <view class="card">
+    <view class="card-title">上课周次</view>
+
+    <picker mode="selector" range="{{weekModeOptions}}" value="{{weekModeIndex}}" bindchange="onWeekModeChange">
+      <view class="picker-item">
+        <text class="picker-label">周次模式</text>
+        <view class="picker-value">
+          <text>{{weekModeOptions[weekModeIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </view>
+    </picker>
+
+    <!-- 自定义周次范围（仅选了"自定义范围"时显示） -->
+    <block wx:if="{{isCustomWeeks}}">
+      <view class="custom-weeks">
+        <picker mode="selector" range="{{weekNumbers}}" value="{{customStartIndex}}" bindchange="onCustomStartChange">
+          <view class="week-chip">
+            <text class="week-chip-label">开始</text>
+            <text class="week-chip-value">第{{weekNumbers[customStartIndex]}}周</text>
+          </view>
+        </picker>
+        <text class="week-chip-sep">至</text>
+        <picker mode="selector" range="{{weekNumbers}}" value="{{customEndIndex}}" bindchange="onCustomEndChange">
+          <view class="week-chip">
+            <text class="week-chip-label">结束</text>
+            <text class="week-chip-value">第{{weekNumbers[customEndIndex]}}周</text>
+          </view>
+        </picker>
+      </view>
+    </block>
+  </view>
+
+  <!-- 颜色选择卡片 -->
+  <view class="card">
+    <view class="card-title">课程颜色 <text class="card-sub">（不选则自动分配）</text></view>
+    <view class="color-row">
+      <view
+        class="color-dot {{selectedColor === item.key ? 'color-dot-active' : ''}}"
+        wx:for="{{colorList}}"
+        wx:key="key"
+        style="background: {{item.swatch}};"
+        data-key="{{item.key}}"
+        bindtap="onColorTap"
+      ></view>
+    </view>
+  </view>
+
+  <!-- 保存按钮 -->
+  <view class="save-btn" bindtap="onSave">{{batch ? '添加并继续' : '保存课程'}}</view>
+
+  <!-- 批量模式：结束录入 -->
+  <view class="save-btn save-btn-ghost" wx:if="{{batch}}" bindtap="finishBatch">
+    {{addedCount > 0 ? '完成，返回课表' : '取消'}}
+  </view>
+
+  <!-- 底部留白 -->
+  <view class="bottom-space"></view>
+</view>

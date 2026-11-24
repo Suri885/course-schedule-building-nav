@@ -1,0 +1,28 @@
+<!-- pages/entrance/entrance.wxml -->
+<view class="en-wrap">
+  <view class="en-tip">
+    你选择了「{{clusterLabel}}」。该侧外立面附近有 {{entrances.length}} 个入口，请点选你要进入的具体入口。
+  </view>
+
+  <!-- 立面示意：楼体外墙 + 一排门洞 -->
+  <view class="facade">
+    <view class="facade-wall">
+      <view
+        wx:for="{{entrances}}"
+        wx:key="id"
+        class="door"
+        data-id="{{item.id}}"
+        bindtap="onPick">
+        <view class="door-frame">
+          <view class="door-leaf"></view>
+        </view>
+        <text class="door-label">{{item.label}}</text>
+      </view>
+    </view>
+    <view class="facade-ground"></view>
+  </view>
+
+  <view class="en-hint">提示：不同入口进入后，到达同一教室的路线可能不同（例如靠近目标教室一侧的入口更近）。</view>
+
+  <button class="btn-ghost" bindtap="onBack">‹ 重新选择区域</button>
+</view>

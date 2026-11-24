@@ -1,0 +1,164 @@
+/* pages/review-mask/review-mask.wxss */
+.rm-bg {
+  min-height: 100vh;
+  background: #f4f6fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22rpx 24rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.rm-tip {
+  width: 100%;
+  background: #EEF4FD;
+  border-radius: 16rpx;
+  padding: 16rpx 22rpx;
+  margin-bottom: 22rpx;
+}
+
+.rm-tip-txt {
+  font-size: 20rpx;
+  color: #4A6C93;
+  line-height: 1.6;
+}
+
+.rm-canvas-wrap {
+  background: #ffffff;
+  border-radius: 18rpx;
+  padding: 10rpx;
+  box-shadow: 0 8rpx 22rpx rgba(31, 45, 61, 0.1);
+}
+
+.rm-canvas {
+  display: block;
+  border-radius: 12rpx;
+}
+
+.rm-loading {
+  height: 400rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-loading-txt {
+  font-size: 24rpx;
+  color: #98a2b3;
+}
+
+/* 工具栏 */
+.rm-tools {
+  width: 100%;
+  margin-top: 26rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 22rpx;
+  box-shadow: 0 4rpx 16rpx rgba(31, 45, 61, 0.05);
+}
+
+.rm-brush-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.rm-tool-label {
+  font-size: 22rpx;
+  color: #8a97a8;
+  margin-right: 16rpx;
+}
+
+.rm-brush {
+  min-width: 72rpx;
+  text-align: center;
+  font-size: 21rpx;
+  color: #667085;
+  background: #f2f5fa;
+  border-radius: 999rpx;
+  padding: 10rpx 14rpx;
+  margin-right: 10rpx;
+}
+
+/* 缩放行 */
+.rm-zoom-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.rm-zoom-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 12rpx;
+  background: #f2f5fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-zoom-txt {
+  font-size: 30rpx;
+  color: #185FA5;
+  line-height: 1;
+}
+
+.rm-zoom-val {
+  min-width: 100rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #1f2d3d;
+  font-weight: 600;
+}
+
+.rm-zoom-reset {
+  margin-left: auto;
+  background: #EEF4FD;
+  border-radius: 999rpx;
+  padding: 10rpx 22rpx;
+}
+
+.rm-zoom-reset-txt {
+  font-size: 21rpx;
+  color: #185FA5;
+}
+
+.rm-brush-on {
+  background: #185FA5;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.rm-btn-row {
+  display: flex;
+}
+
+.rm-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 16rpx;
+  background: #f2f4f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.rm-btn:last-child {
+  margin-right: 0;
+}
+
+.rm-btn-txt {
+  font-size: 25rpx;
+  color: #667085;
+}
+
+.rm-btn-primary {
+  flex: 2;
+  background: linear-gradient(120deg, #2E7BC4 0%, #185FA5 100%);
+}
+
+.rm-btn-txt-primary {
+  color: #ffffff;
+  font-weight: 600;
+}

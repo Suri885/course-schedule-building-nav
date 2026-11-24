@@ -1,0 +1,38 @@
+<!-- pages/extmap/extmap.wxml -->
+<view class="ext-wrap">
+  <view class="ext-tip">
+    在楼栋俯视图上点选你大概所在的一侧入口区域；同侧若含多个相近入口，下一步会请你精确选择。
+  </view>
+
+  <view class="map-box">
+    <canvas type="2d" id="map" class="map-canvas"></canvas>
+    <!-- 入口簇标记（覆盖在 canvas 上，按百分比定位） -->
+    <view
+      wx:for="{{markers}}"
+      wx:key="key"
+      class="cluster-pin"
+      style="left:{{item.left}}%; top:{{item.top}}%;"
+      data-key="{{item.key}}"
+      bindtap="onTapCluster">
+      <view class="cluster-dot"></view>
+      <text class="cluster-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="legend">
+    <text class="lg-item"><text class="lg-sw" style="background:#ef4444"></text>入口</text>
+    <text class="lg-item"><text class="lg-sw" style="background:#f59e0b"></text>电梯</text>
+    <text class="lg-item"><text class="lg-sw" style="background:#10b981"></text>楼梯</text>
+    <text class="lg-item"><text class="lg-sw" style="background:#334155"></text>走廊</text>
+    <text class="lg-item"><text class="lg-sw" style="background:#2a374a"></text>教室</text>
+  </view>
+
+  <view class="actions">
+    <button class="btn-ghost" bindtap="onOpenSearch">🔍 教室查询</button>
+    <button wx:if="{{hasLast}}" class="btn-primary" bindtap="onUseLast">用上次入口进入（{{lastLabel}}）</button>
+  </view>
+
+  <view class="note">
+    说明：此为程序化示意底图。接入真实楼栋后，可把本页替换为微信 &lt;map&gt;（腾讯底图）或高德 web-view，填入真实经纬度即可显示周边真实地图。
+  </view>
+</view>

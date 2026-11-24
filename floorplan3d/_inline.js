@@ -1,0 +1,902 @@
+
+(function () {
+  if (typeof THREE === 'undefined' || !window.FLOOR3) { document.getElementById('err').style.display = 'flex'; return; }
+
+  var F = window.FLOOR3;
+  var D_ROOMS = F.D_ROOMS, C_ROOMS = F.C_ROOMS, D_CORR = F.D_CORR, C_CORR = F.C_CORR;
+  var D_BOX = F.D_BOX, C_BOX = F.C_BOX;
+  var D_SHELL = F.D_SHELL, C_SHELL = F.C_SHELL;
+  var D_VOIDS = F.D_VOIDS || [], C_VOIDS = F.C_VOIDS || [];
+  var LINKS = F.LINKS || [];
+  var LK = F.LINK;                       // {axis, quad, local, hit}：斜连廊的公共几何工具
+  var D_BASE = F.D_BASE, C_BASE = F.C_BASE;
+  var CX = F.CX, CZ = F.CZ;
+  var C_POLY = F.C_POLY || [];
+
+  var WALL_H = 3.0;
+  var WALL_T = 0.14;    // 室内隔墙：薄
+  var OUT_T  = 0.36;    // 建筑外墙：厚（不可穿）
+  var OUT_OFF = 0.27;
+  var EYE = 1.65;
+
+  /* ============================================================================
+   * 【坐标朝向修正】—— 三维里的 z 必须取反
+   * plan-data.js 用的是「x 向东、z 向北」，画到俯视图 canvas 上「上＝北」，是对的。
+   * 但 three.js 是右手系：x 向东、y 向上时，+z 只能朝南。
+   * 若把平面 z 直接当 three 的 z，整栋楼就是镜像的：
+   *   站在 D-301 面朝 D-307（向西）→ 右手边本该是北排教室，却变成了南侧卫生间。
+   * 所以三维里统一 three.z = -plan.z：所有几何体都过 TZ()，
+   * 相机、碰撞、分区判断用 PZ() 换回平面坐标（自反，正反一样）。
+   * 对照关系：北 = -z、南 = +z、东 = +x、西 = -x。
+   * ========================================================================== */
+  function TZ(z) { return -z; }
+  function PZ(z) { return -z; }
+
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  scene.fog = new THREE.Fog(0xffffff, 120, 280);
+
+  var camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.05, 2400);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xbfc4c8, 0.18));
+  var d1 = new THREE.DirectionalLight(0xffffff, 0.30); d1.position.set(60, 130, 40); scene.add(d1);
+  var d2 = new THREE.DirectionalLight(0xffffff, 0.10); d2.position.set(-40, 90, -60); scene.add(d2);
+
+  /* 【配色】按实景照片：白墙 + 灰色石砖地面 + 木色（棕黄）门。
+     走廊比房间略深一档，保留"哪里能走"的视觉提示，但不再是蓝色。 */
+  var floorMat = new THREE.MeshLambertMaterial({ color: 0xc1c5c7 });   // 房间地面：浅灰
+  var wallMat  = new THREE.MeshLambertMaterial({ color: 0xfbfbfa });   // 隔墙：白
+  var outerMat = new THREE.MeshLambertMaterial({ color: 0xf4f5f5 });   // 外墙：白
+  var corrMat  = new THREE.MeshLambertMaterial({ color: 0xa8aeb2 });   // 走廊：深一档的灰
+  var rampMat  = new THREE.MeshLambertMaterial({ color: 0xa8aeb2, side: THREE.DoubleSide });
+  var ceilMat  = new THREE.MeshBasicMaterial({ color: 0xf1f3f3 });     // 吊顶：白（不受光，避免仰视发灰）
+  var lineMat  = new THREE.LineBasicMaterial({ color: 0xdadfe3 });     // 内部构件描边（淡）
+  var outLineMat = new THREE.LineBasicMaterial({ color: 0xcdd3d8 });   // 外墙描边（淡）
+  var stepMat  = new THREE.LineBasicMaterial({ color: 0xb9c1c8 });
+
+  function addFloorRect(x, z, w, d, mat, y) {
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat || floorMat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x + w / 2, y, TZ(z + d / 2));
+    scene.add(m);
+    var g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, y + 0.004, TZ(z)), new THREE.Vector3(x + w, y + 0.004, TZ(z)),
+      new THREE.Vector3(x + w, y + 0.004, TZ(z + d)), new THREE.Vector3(x, y + 0.004, TZ(z + d)),
+      new THREE.Vector3(x, y + 0.004, TZ(z))
+    ]);
+    scene.add(new THREE.Line(g, lineMat));
+  }
+
+  function addWall(cx, cz, w, d, h, baseY, mat, lm) {
+    var g = new THREE.BoxGeometry(w, h, d);
+    var m = new THREE.Mesh(g, mat || wallMat);
+    m.position.set(cx, baseY + h / 2, TZ(cz));
+    scene.add(m);
+    var e = new THREE.LineSegments(new THREE.EdgesGeometry(g), lm || lineMat);
+    e.position.copy(m.position);
+    scene.add(e);
+  }
+
+  // 门 / 门牌 统一挂在"门所在边"的正中
+  // 三维里 z 取反后：门牌的朝向按 ry'=π-ry 换算（南北对调、东西不变），
+  // 否则牌子会翻到墙里面去 / 字朝里看不见。
+  function edgeInfo(r, edge) {
+    var x = r[1], z = r[2], w = r[3], d = r[4], eps = 0.10;
+    if (edge === 'S') return { px: x + w / 2, pz: TZ(z - eps),     ry: 0,            len: w };
+    if (edge === 'N') return { px: x + w / 2, pz: TZ(z + d + eps), ry: Math.PI,      len: w };
+    if (edge === 'W') return { px: x - eps,   pz: TZ(z + d / 2),   ry: -Math.PI / 2, len: d };
+    return              { px: x + w + eps, pz: TZ(z + d / 2),   ry: Math.PI / 2,  len: d };
+  }
+
+  function addSign(text, ei, baseY) {
+    var c = document.createElement('canvas');
+    c.width = 512; c.height = 160;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 512, 160);
+    ctx.strokeStyle = '#c9ced4'; ctx.lineWidth = 4; ctx.strokeRect(2, 2, 508, 156);
+    ctx.fillStyle = '#111';
+    /* 字尽量撑满牌面：原来 2 个字的房间号只占牌宽的三分之一，远看糊成一团 */
+    var fs = Math.min(150, Math.floor(470 / text.length));
+    ctx.font = 'bold ' + fs + 'px "Microsoft YaHei","PingFang SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 84);
+    var tex = new THREE.CanvasTexture(c);
+    tex.minFilter = THREE.LinearFilter;
+    var mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+    var pw = Math.max(0.72, Math.min(1.05, ei.len * 0.46));
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(pw, pw * 0.3125), mat);
+    m.position.set(ei.px, baseY + 2.62, ei.pz);
+    m.rotation.y = ei.ry;
+    scene.add(m);
+  }
+
+  /* 门：实景是浅棕黄木门 + 门上一条竖长玻璃 + 白色门套。
+     门扇用木色，门套用略深的木色三条（左右 + 上），玻璃用浅青灰，避免和墙混成一片白。 */
+  var doorMat  = new THREE.MeshLambertMaterial({ color: 0xc99a63 });
+  var doorFrameMat = new THREE.MeshLambertMaterial({ color: 0xb3814c });
+  var doorGlassMat = new THREE.MeshLambertMaterial({ color: 0xcfe0e3 });
+  function addDoor(ei, baseY) {
+    var dw = Math.max(0.6, Math.min(1.15, ei.len - 0.3));
+    var alongZ = (ei.ry === 0 || ei.ry === Math.PI);   // 门在南北向墙上 → 门扇沿 x 伸展
+    var leafH = 2.06;
+    var geo = alongZ ? new THREE.BoxGeometry(dw, leafH, 0.055) : new THREE.BoxGeometry(0.055, leafH, dw);
+    var m = new THREE.Mesh(geo, doorMat);
+    m.position.set(ei.px, baseY + leafH / 2, ei.pz);
+    scene.add(m);
+
+    /* 门套：左右立梃 + 上槛，厚度比门扇大，门扇"嵌"在里面 */
+    var fw = 0.075, fd = 0.10;
+    function bar(cx, cy, cz, w, h, d) {
+      var g2 = new THREE.BoxGeometry(w, h, d);
+      var m2 = new THREE.Mesh(g2, doorFrameMat);
+      m2.position.set(cx, cy, cz);
+      scene.add(m2);
+    }
+    if (alongZ) {
+      bar(ei.px - dw / 2 - fw / 2, baseY + (leafH + fw) / 2, ei.pz, fw, leafH + fw, fd);
+      bar(ei.px + dw / 2 + fw / 2, baseY + (leafH + fw) / 2, ei.pz, fw, leafH + fw, fd);
+      bar(ei.px, baseY + leafH + fw / 2, ei.pz, dw + fw * 2, fw, fd);
+    } else {
+      bar(ei.px, baseY + (leafH + fw) / 2, ei.pz - dw / 2 - fw / 2, fd, leafH + fw, fw);
+      bar(ei.px, baseY + (leafH + fw) / 2, ei.pz + dw / 2 + fw / 2, fd, leafH + fw, fw);
+      bar(ei.px, baseY + leafH + fw / 2, ei.pz, fd, fw, dw + fw * 2);
+    }
+
+    /* 门上的竖长玻璃（实景那块细长窗） */
+    var gw = Math.min(0.44, dw * 0.44), gh = 0.95;
+    var gg = alongZ ? new THREE.BoxGeometry(gw, gh, 0.075) : new THREE.BoxGeometry(0.075, gh, gw);
+    var mg = new THREE.Mesh(gg, doorGlassMat);
+    mg.position.set(ei.px, baseY + 1.50, ei.pz);
+    scene.add(mg);
+  }
+
+  function addExitSign(ei, baseY) {
+    var c = document.createElement('canvas');
+    c.width = 384; c.height = 128;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#0f7a3d'; ctx.fillRect(0, 0, 384, 128);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 62px "Microsoft YaHei","PingFang SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('出口', 192, 68);
+    var tex = new THREE.CanvasTexture(c);
+    tex.minFilter = THREE.LinearFilter;
+    var mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.5), mat);
+    m.position.set(ei.px, baseY + 2.86, ei.pz);
+    m.rotation.y = ei.ry;
+    scene.add(m);
+  }
+
+  function drawStairSteps(r, baseY) {
+    var x = r[1], z = r[2], w = r[3], d = r[4];
+    var along = (d >= w), n = 8, pts = [];
+    for (var i = 1; i < n; i++) {
+      var t = i / n;
+      if (along) { var zz = TZ(z + d * t); pts.push(new THREE.Vector3(x + 0.15, baseY + 0.035, zz), new THREE.Vector3(x + w - 0.15, baseY + 0.035, zz)); }
+      else { var xx = x + w * t; pts.push(new THREE.Vector3(xx, baseY + 0.035, TZ(z + 0.15)), new THREE.Vector3(xx, baseY + 0.035, TZ(z + d - 0.15))); }
+    }
+    scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), stepMat));
+  }
+
+  // 楼梯口：那面墙留 2.0m 宽的开口（图上楼梯口直接与走廊相连，不砌墙、不装门）
+  var OPEN_W = 2.0;
+  function buildRoom(r, baseY) {
+    var x = r[1], z = r[2], w = r[3], d = r[4], type = r[5], edge = r[6];
+    var cx = x + w / 2, cz = z + d / 2;
+    addFloorRect(x, z, w, d, floorMat, baseY + 0.02);
+
+    var open = (type === 'stair') ? edge : null;
+    var gap = Math.min(OPEN_W, (open === 'N' || open === 'S') ? w - 0.3 : d - 0.3);
+    if (open === 'N' || open === 'S') {
+      var zz = (open === 'S') ? z : z + d;
+      var half = gap / 2;
+      if (cx - half - x > 0.12) addWall((x + cx - half) / 2, zz, cx - half - x, WALL_T, WALL_H, baseY);
+      if (x + w - (cx + half) > 0.12) addWall((cx + half + x + w) / 2, zz, x + w - cx - half, WALL_T, WALL_H, baseY);
+    } else if (open === 'W' || open === 'E') {
+      var xx = (open === 'W') ? x : x + w;
+      var hh = gap / 2;
+      if (cz - hh - z > 0.12) addWall(xx, (z + cz - hh) / 2, WALL_T, cz - hh - z, WALL_H, baseY);
+      if (z + d - (cz + hh) > 0.12) addWall(xx, (cz + hh + z + d) / 2, WALL_T, z + d - cz - hh, WALL_H, baseY);
+    } else {
+      addWall(cx, z, w, WALL_T, WALL_H, baseY);
+      addWall(cx, z + d, w, WALL_T, WALL_H, baseY);
+      addWall(x, cz, WALL_T, d, WALL_H, baseY);
+      addWall(x + w, cz, WALL_T, d, WALL_H, baseY);
+    }
+
+    if (type === 'stair') drawStairSteps(r, baseY);
+    if (!edge) return;
+    var ei = edgeInfo(r, edge);
+    if (type === 'stair') { addExitSign(ei, baseY); return; }   // 楼梯口不装门扇
+    addDoor(ei, baseY);
+    if (type === 'exit') addExitSign(ei, baseY);
+    else addSign(r[0], ei, baseY);
+  }
+
+  // 空地（原图无标签、无门、走不进去的空白区）：地面下沉 + 四周矮护栏
+  var voidFloorMat = new THREE.MeshLambertMaterial({ color: 0xb4babd });
+  function buildVoid(v, baseY) {
+    var x = v[0], z = v[1], w = v[2], d = v[3];
+    addFloorRect(x, z, w, d, voidFloorMat, baseY - 0.30);
+    function rail(cx2, cz2, ww, dd) {
+      var g = new THREE.BoxGeometry(ww, 0.06, dd);
+      var m = new THREE.Mesh(g, wallMat);
+      m.position.set(cx2, baseY + 0.92, TZ(cz2));
+      scene.add(m);
+      var e = new THREE.LineSegments(new THREE.EdgesGeometry(g), lineMat);
+      e.position.copy(m.position); scene.add(e);
+    }
+    /* 四周砌到顶：空地是采光井/上空，站在走廊里看到的应该是一堵白墙，
+       不是半截矮墙加一道缝（之前从卫生间前室看出去像个开着的方框）。 */
+    addWall(x + w / 2, z, w, 0.10, WALL_H, baseY, wallMat);
+    addWall(x + w / 2, z + d, w, 0.10, WALL_H, baseY, wallMat);
+    addWall(x, z + d / 2, 0.10, d, WALL_H, baseY, wallMat);
+    addWall(x + w, z + d / 2, 0.10, d, WALL_H, baseY, wallMat);
+  }
+
+  // 多边形房间（斜边里的出口楼梯）：地面按多边形铺，墙逐边砌，门那一边留 2m 洞口
+  // 顶点先换成三维坐标（z 取反），后面砌墙 / 踏步 / 出口牌都在这套坐标里算
+  function buildPolyRoom(p, baseY) {
+    var pts = p[1].map(function (q) { return [q[0], TZ(q[1])]; }), edge = p[3];
+    var shape = new THREE.Shape();
+    pts.forEach(function (q, i) {
+      if (i === 0) shape.moveTo(q[0], q[1]); else shape.lineTo(q[0], q[1]);
+    });
+    var fg = new THREE.ShapeGeometry(shape);
+    var fm = new THREE.Mesh(fg, new THREE.MeshLambertMaterial({ color: 0xd6d9db, side: THREE.DoubleSide }));
+    fm.rotation.x = Math.PI / 2;
+    fm.position.y = baseY + 0.02;
+    scene.add(fm);
+
+    for (var i = 0; i < pts.length; i++) {
+      var a = pts[i], b = pts[(i + 1) % pts.length];
+      var dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
+      if (L < 0.25) continue;
+      var ang = -Math.atan2(dz, dx);
+      var seg = function (t0, t1) {
+        var len = (t1 - t0) * L;
+        if (len < 0.18) return;
+        var cx = a[0] + dx * (t0 + t1) / 2, cz = a[1] + dz * (t0 + t1) / 2;
+        var g = new THREE.BoxGeometry(len, WALL_H, WALL_T);
+        var m = new THREE.Mesh(g, wallMat);
+        m.position.set(cx, baseY + WALL_H / 2, cz);
+        m.rotation.y = ang; scene.add(m);
+        var e = new THREE.LineSegments(new THREE.EdgesGeometry(g), lineMat);
+        e.position.copy(m.position); e.rotation.copy(m.rotation); scene.add(e);
+      };
+      if (i === edge) {
+        var gap = Math.min(OPEN_W, L * 0.62) / L;
+        seg(0, 0.5 - gap / 2); seg(0.5 + gap / 2, 1);
+      } else seg(0, 1);
+    }
+
+    // 楼梯踏步
+    var zs = pts.map(function (q) { return q[1]; });
+    var xs = pts.map(function (q) { return q[0]; });
+    var z0 = Math.min.apply(null, zs), z1 = Math.max.apply(null, zs);
+    var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+    var ptsStep = [];
+    for (var k = 1; k < 7; k++) {
+      var zz = z0 + (z1 - z0) * k / 7;
+      ptsStep.push(new THREE.Vector3(x0, baseY + 0.035, zz), new THREE.Vector3(x1, baseY + 0.035, zz));
+    }
+    scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ptsStep), stepMat));
+
+    // 门边中点的出口标识
+    var a2 = pts[edge], b2 = pts[(edge + 1) % pts.length];
+    var mx = (a2[0] + b2[0]) / 2, mz = (a2[1] + b2[1]) / 2;
+    var ex = b2[0] - a2[0], ez = b2[1] - a2[1], el = Math.hypot(ex, ez);
+    var ry = Math.atan2(-ez / el, ex / el);
+    addExitSign({ px: mx, pz: mz, ry: ry + Math.PI / 2, len: el }, baseY);
+  }
+
+  D_ROOMS.forEach(function (r) { buildRoom(r, D_BASE); });
+  C_ROOMS.forEach(function (r) { buildRoom(r, C_BASE); });
+  C_POLY.forEach(function (p) { buildPolyRoom(p, C_BASE); });
+  D_VOIDS.forEach(function (v) { buildVoid(v, D_BASE); });
+  C_VOIDS.forEach(function (v) { buildVoid(v, C_BASE); });
+
+  // 走廊地面 + 天花板
+  var ceilStripMat = new THREE.MeshBasicMaterial({ color: 0x5d656b });
+  function addCeil(x, z, w, d, y) {
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), ceilMat);
+    m.rotation.x = Math.PI / 2;
+    m.position.set(x + w / 2, y, TZ(z + d / 2));
+    scene.add(m);
+    /* 吊顶中间那条深色灯槽 —— 实景里走廊顶上就是这个样子，去掉后头顶一片纯白很假 */
+    if (w > 1.7 && d > 1.7) {
+      var alongX = w >= d;
+      var sw = alongX ? w * 0.82 : 0.42, sd = alongX ? 0.42 : d * 0.82;
+      var sg = new THREE.Mesh(new THREE.PlaneGeometry(sw, sd), ceilStripMat);
+      sg.rotation.x = Math.PI / 2;
+      sg.position.set(x + w / 2, y - 0.012, TZ(z + d / 2));
+      scene.add(sg);
+    }
+  }
+  D_CORR.forEach(function (c, i) {
+    addFloorRect(c[0], c[1], c[2], c[3], corrMat, D_BASE + 0.010 + i * 0.0006);
+    addCeil(c[0], c[1], c[2], c[3], D_BASE + WALL_H);
+  });
+  C_CORR.forEach(function (c, i) {
+    addFloorRect(c[0], c[1], c[2], c[3], corrMat, C_BASE + 0.010 + i * 0.0006);
+    addCeil(c[0], c[1], c[2], c[3], C_BASE + WALL_H);
+  });
+
+  // ============================================================
+  // 建筑外墙（厚、深灰、不可穿）—— 连廊接口处留洞
+  // ============================================================
+  function outerWallH(xFrom, xTo, zc, baseY) {
+    if (xTo - xFrom < 0.2) return;
+    addWall((xFrom + xTo) / 2, zc, xTo - xFrom, OUT_T, WALL_H, baseY, outerMat, outLineMat);
+  }
+  function outerWallV(xc, zFrom, zTo, baseY) {
+    if (zTo - zFrom < 0.2) return;
+    addWall(xc, (zFrom + zTo) / 2, OUT_T, zTo - zFrom, WALL_H, baseY, outerMat, outLineMat);
+  }
+  // 任意走向的外墙段（斜边也适用）—— 端点先换到三维坐标，再按走向转盒子
+  function outerWallSeg(s, baseY) {
+    var ax = s[0], az = TZ(s[1]), bx = s[2], bz = TZ(s[3]);
+    var dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz);
+    if (L < 0.2) return;
+    var g = new THREE.BoxGeometry(L, WALL_H, OUT_T);
+    var m = new THREE.Mesh(g, outerMat);
+    m.position.set((ax + bx) / 2, baseY + WALL_H / 2, (az + bz) / 2);
+    m.rotation.y = -Math.atan2(dz, dx);
+    scene.add(m);
+    var e = new THREE.LineSegments(new THREE.EdgesGeometry(g), outLineMat);
+    e.position.copy(m.position); e.rotation.copy(m.rotation); scene.add(e);
+  }
+  // C 座地坪：整栋比 D 座高 0.9 m，做成多边形台基，避免楼板悬空
+  (function buildPodium() {
+    var pts = F.C_OUTLINE || [];
+    if (!pts.length) return;
+    var sh = new THREE.Shape();
+    pts.forEach(function (q, i) {
+      if (i === 0) sh.moveTo(q[0], TZ(q[1])); else sh.lineTo(q[0], TZ(q[1]));
+    });
+    var g = new THREE.ExtrudeGeometry(sh, { depth: C_BASE, bevelEnabled: false });
+    var m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: 0xeceeef }));
+    /* C_OUTLINE 本身已是全局坐标（局部+CX/CZ），这里只摆高度，不能再平移，
+       否则整块台基会飘到 C 座东边去。z 已在建面时取反。 */
+    m.rotation.x = Math.PI / 2;
+    m.position.set(0, C_BASE, 0);
+    scene.add(m);
+  })();
+
+  (function buildShells() {
+    // 外墙与 2D 平面图使用同一组实际外轮廓线段；凹口、南侧阶教、C 座斜边均按实际走向砌。
+    D_SHELL.forEach(function (s) { outerWallSeg(s, D_BASE); });
+    C_SHELL.forEach(function (s) { outerWallSeg(s, C_BASE); });
+  })();
+
+  // ============================================================
+  // 连廊：两条都是斜的。桥面沿中线 a→b，高度由 D_BASE 匀坡升到 C_BASE
+  // 几何全部由 F.LINK 提供的 axis / quad 派生，和平面图口径一致
+  // ============================================================
+  (function buildLink() {
+    LINKS.forEach(function (b) {
+      var A = LK.axis(b), h = b.w / 2;
+      var y0 = D_BASE + 0.02, y1 = C_BASE + 0.02;
+
+      /* 桥面：沿中线 a→b 的斜长条 */
+      var p = [
+        [b.ax + A.nx * h, TZ(b.az + A.nz * h), y0],
+        [b.bx + A.nx * h, TZ(b.bz + A.nz * h), y1],
+        [b.bx - A.nx * h, TZ(b.bz - A.nz * h), y1],
+        [b.ax - A.nx * h, TZ(b.az - A.nz * h), y0]
+      ];
+      var g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+        p[0][0], p[0][2], p[0][1], p[1][0], p[1][2], p[1][1], p[2][0], p[2][2], p[2][1],
+        p[0][0], p[0][2], p[0][1], p[2][0], p[2][2], p[2][1], p[3][0], p[3][2], p[3][1]
+      ]), 3));
+      g.computeVertexNormals();
+      scene.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: 0xa8aeb2, side: THREE.DoubleSide })));
+      scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(p[0][0], p[0][2], p[0][1]),
+        new THREE.Vector3(p[1][0], p[1][2], p[1][1]),
+        new THREE.Vector3(p[2][0], p[2][2], p[2][1]),
+        new THREE.Vector3(p[3][0], p[3][2], p[3][1])
+      ]), lineMat));
+
+      /* 两侧：半透明玻璃栏板（跟着坡度走）+ 顶部扶手线 */
+      [-1, 1].forEach(function (sgn) {
+        var nx = A.nx * h * sgn, nz = A.nz * h * sgn;
+        var ax = b.ax + nx, az = b.az + nz, bx = b.bx + nx, bz = b.bz + nz;
+        var g2 = new THREE.BufferGeometry();
+        g2.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+          ax, y0, TZ(az), bx, y1, TZ(bz), bx, y1 + 1.05, TZ(bz),
+          ax, y0, TZ(az), bx, y1 + 1.05, TZ(bz), ax, y0 + 1.05, TZ(az)
+        ]), 3));
+        g2.computeVertexNormals();
+        scene.add(new THREE.Mesh(g2, new THREE.MeshLambertMaterial({
+          color: 0xdfe4e8, transparent: true, opacity: 0.45, side: THREE.DoubleSide
+        })));
+        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(ax, y0 + 1.05, TZ(az)),
+          new THREE.Vector3(bx, y1 + 1.05, TZ(bz))
+        ]), lineMat));
+      });
+    });
+  })();
+
+  // "通往 C 座 / 通往 D 座"标识牌（正反两面，避免镜像）
+  function makeLabel(text, px, py, pz, rotY, pw, ph) {
+    var c = document.createElement('canvas');
+    c.width = 1024; c.height = 256;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 1024, 256);
+    ctx.strokeStyle = '#1b2026'; ctx.lineWidth = 10; ctx.strokeRect(5, 5, 1014, 246);
+    ctx.fillStyle = '#1b2026';
+    ctx.font = 'bold 112px "Microsoft YaHei","PingFang SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 512, 134);
+    var tex = new THREE.CanvasTexture(c);
+    tex.minFilter = THREE.LinearFilter;
+    var geo = new THREE.PlaneGeometry(pw, ph);
+    var matF = new THREE.MeshBasicMaterial({ map: tex });
+    var nx = Math.sin(rotY), nz = Math.cos(rotY);
+    [1, -1].forEach(function (sgn) {
+      var m = new THREE.Mesh(geo, matF);
+      m.position.set(px + nx * 0.02 * sgn, py, pz + nz * 0.02 * sgn);
+      m.rotation.y = (sgn > 0) ? rotY : rotY + Math.PI;
+      scene.add(m);
+    });
+  }
+  makeLabel('→ 通往 C 座', 80.4, 2.55, TZ(34.6), -Math.PI / 2, 3.2, 0.76);   // D 北横廊东端
+  makeLabel('→ 通往 D 座', 129.4, C_BASE + 2.55, TZ(34.4), Math.PI / 2, 3.2, 0.76); // C 座 通往D座口
+
+  function floorArrow(cx, cz, len, wid, rotY, baseY) {
+    var pts = [len / 2, 0, 0, -len / 2, 0, -wid / 2, -len / 2, 0, wid / 2];
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+    g.computeVertexNormals();
+    /* 浅色填充 + 细描边：深色实心箭头在低视角下会被当成地面破洞 */
+    var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xc6d6e6, side: THREE.DoubleSide }));
+    m.position.set(cx, baseY + 0.045, TZ(cz));
+    m.rotation.y = rotY;
+    scene.add(m);
+    var loop = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(pts[0], 0, pts[2]),
+      new THREE.Vector3(pts[3], 0, pts[5]),
+      new THREE.Vector3(pts[6], 0, pts[8])
+    ]);
+    var e = new THREE.LineLoop(loop, new THREE.LineBasicMaterial({ color: 0x7d94ab }));
+    e.position.copy(m.position); e.rotation.copy(m.rotation);
+    scene.add(e);
+  }
+  floorArrow(76, 34.6, 2.8, 1.6, 0, D_BASE);             // D 廊东端：向东
+  floorArrow(91, 34.6, 2.0, 1.3, 0, 0.45);               // 连廊坡道：向东上坡
+
+  (function () {
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(260, 150), new THREE.MeshLambertMaterial({ color: 0xe4e7e9 }));
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(60, -0.08, -10);
+    scene.add(m);
+  })();
+
+  // ============================================================
+  // 可走区域 & 地面高度
+  // ============================================================
+  function inRect(x, z, r) { return x >= r[0] && x <= r[0] + r[2] && z >= r[1] && z <= r[1] + r[3]; }
+  function inBox(x, z, b) { return x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1; }
+  /* 传进来的是三维坐标（z 朝南），先换回平面坐标（z 朝北）再查表 */
+  function walkable(X, Z) {
+    var x = X, z = PZ(Z);
+    for (var k = 0; k < LINKS.length; k++) {
+      if (LK.hit(LINKS[k], x, z)) return true;     // 斜连廊：按四边形判定
+    }
+    for (var i = 0; i < D_CORR.length; i++) if (inRect(x, z, D_CORR[i])) return true;
+    for (var j = 0; j < C_CORR.length; j++) if (inRect(x, z, C_CORR[j])) return true;
+    return false;
+  }
+  var C_OUTLINE = F.C_OUTLINE || [];
+  function inCPoly(x, z) {
+    var pts = C_OUTLINE, c = false;
+    for (var i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      var xi = pts[i][0], zi = pts[i][1], xj = pts[j][0], zj = pts[j][1];
+      if (((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) c = !c;
+    }
+    return c;
+  }
+  function groundY(X, Z) {
+    var x = X, z = PZ(Z);
+    for (var k = 0; k < LINKS.length; k++) {
+      var b = LINKS[k];
+      if (LK.hit(b, x, z)) {
+        var t = LK.local(b, x, z).t;
+        if (t < 0) t = 0; if (t > 1) t = 1;
+        return D_BASE + t * (C_BASE - D_BASE);   // 匀坡：0 → 0.9 m
+      }
+    }
+    if (inCPoly(x, z) || x >= C_BOX.x0) return C_BASE;
+    return D_BASE;
+  }
+
+  // ============================================================
+  // 右上角俯视图（与 plan.html 用同一份数据、同一个渲染函数）
+  // ============================================================
+  var miniCv = document.getElementById('miniCv');
+  var miniCtx = miniCv.getContext('2d');
+  var miniPosEl = document.getElementById('miniPos');
+  var MW = miniCv.width, MH = miniCv.height;
+
+  var miniBase = document.createElement('canvas');
+  miniBase.width = MW; miniBase.height = MH;
+  F.render(miniBase.getContext('2d'), MW, MH, { pad: 10 });
+
+  function drawPlayerOn(ctx) {
+    var B = { x0: -7, x1: 150, z0: -37, z1: 49 };
+    var pad = 10;
+    var SC = Math.min((MW - pad * 2) / (B.x1 - B.x0), (MH - pad * 2) / (B.z1 - B.z0));
+    var OX = (MW - (B.x1 - B.x0) * SC) / 2, OY = (MH - (B.z1 - B.z0) * SC) / 2;
+    var pz = PZ(pos.z);                    // 三维 z（南为正）→ 平面 z（北为正），画布上朝北
+    var ax = OX + (pos.x - B.x0) * SC, ay = OY + (B.z1 - pz) * SC;
+    var fx = -Math.sin(yaw), fz = -Math.cos(yaw);   // 三维前向，+z 朝南＝画布向下
+    var ang = Math.atan2(fz, fx);
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(ax, ay);
+    ctx.arc(ax, ay, SC * 6, ang - 0.5, ang + 0.5);
+    ctx.closePath(); ctx.fillStyle = 'rgba(214,74,74,.20)'; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(ax + Math.cos(ang) * SC * 2.6, ay + Math.sin(ang) * SC * 2.6);
+    ctx.lineTo(ax + Math.cos(ang + 2.45) * SC * 1.3, ay + Math.sin(ang + 2.45) * SC * 1.3);
+    ctx.lineTo(ax + Math.cos(ang - 2.45) * SC * 1.3, ay + Math.sin(ang - 2.45) * SC * 1.3);
+    ctx.closePath(); ctx.fillStyle = '#d64a4a'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ax, ay, SC * 0.85, 0, Math.PI * 2);
+    ctx.fillStyle = '#d64a4a'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = SC * 0.28; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMini() {
+    miniCtx.clearRect(0, 0, MW, MH);
+    miniCtx.drawImage(miniBase, 0, 0);
+    drawPlayerOn(miniCtx);
+  }
+
+  /* 大地图：点小图铺满整屏，可拖动平移 / 双指捏合 / 滚轮 / 双击缩放。
+     竖屏时默认按“高度铺满”打开，直接是局部放大（而不是把 2:1 的图压成一条）。 */
+  var bigEl = document.getElementById('big');
+  var bigStage = document.getElementById('bigStage');
+  var bigCv = document.getElementById('bigCv');
+  var bigZoomTxt = document.getElementById('bigZoomTxt');
+  var BW = 2200, BH = 1030;
+  bigCv.width = BW; bigCv.height = BH;
+  var bigCtx = bigCv.getContext('2d');
+  var bigOn = false, bk = 1, bx = 0, by = 0, bmin = 0.2, bmax = 6;
+
+  function stageSize() { return { w: bigStage.clientWidth || 1, h: bigStage.clientHeight || 1 }; }
+  function fitK() { var s = stageSize(); return Math.min((s.w - 2) / BW, (s.h - 2) / BH); }
+  function applyBig() {
+    bigCv.style.transform = 'translate(' + bx.toFixed(2) + 'px,' + by.toFixed(2) + 'px) scale(' + bk.toFixed(4) + ')';
+    bigZoomTxt.textContent = Math.round(bk * 100) + '%';
+  }
+  function clampPan() {
+    var s = stageSize(), w = BW * bk, h = BH * bk, m = 48;
+    if (w <= s.w - 2) bx = (s.w - w) / 2;
+    else bx = Math.min(m, Math.max(s.w - w - m, bx));
+    if (h <= s.h - 2) by = (s.h - h) / 2;
+    else by = Math.min(m, Math.max(s.h - h - m, by));
+  }
+  function zoomAt(k, cx, cy) {
+    k = Math.max(bmin, Math.min(bmax, k));
+    if (Math.abs(k - bk) < 1e-5) { return; }
+    var s = stageSize(), sx = (cx == null ? s.w / 2 : cx), sy = (cy == null ? s.h / 2 : cy);
+    var ccx = (sx - bx) / bk, ccy = (sy - by) / bk;
+    bk = k; bx = sx - ccx * bk; by = sy - ccy * bk;
+    clampPan(); applyBig();
+  }
+  function bigFitAll() {
+    var s = stageSize();
+    bk = fitK(); bx = (s.w - BW * bk) / 2; by = (s.h - BH * bk) / 2;
+    clampPan(); applyBig();
+  }
+  function openBig() {
+    var m = F.render(bigCtx, BW, BH, { pad: 18, fullLabels: true, player: { x: pos.x, z: PZ(pos.z), yaw: yaw } });
+    bigEl.classList.add('on');
+    bigOn = true;
+    var s = stageSize(), fit = fitK(), fitW = (s.w - 2) / BW, fitH = (s.h - 2) / BH;
+    /* 只有窗口明显竖长（手机竖屏）才“按高度铺满”打开，直接是能读字的局部；
+       宽屏/横屏仍先给整图，看得见两栋楼全貌，想放大再捏合或点「＋」 */
+    var portrait = (s.h > s.w * 1.12);
+    bk = portrait ? Math.max(fit, Math.min(fitH, fitW * 3.6)) : fit;
+    bmin = Math.min(fit, bk) * 0.62; bmax = Math.max(bk * 5, 5);
+    bx = (s.w - BW * bk) / 2; by = (s.h - BH * bk) / 2;
+    if (m && m.px && bk > fit * 1.05) {           // 放大态：把“你在这里”挪到视口中间偏下
+      bx = s.w / 2 - m.px(pos.x) * bk;
+      by = s.h * 0.56 - m.pz(PZ(pos.z)) * bk;
+    }
+    clampPan(); applyBig();
+  }
+  function closeBig() { bigEl.classList.remove('on'); bigOn = false; }
+  function toggleBig() { if (bigOn) closeBig(); else openBig(); }
+
+  /* ---- 拖动 / 捏合 / 滚轮 / 双击 ---- */
+  var bPts = {}, bDrag = false, bMoved = 0, bLX = 0, bLY = 0, bPinch0 = 0, bPinchK0 = 1;
+  function pDist() {
+    var id = Object.keys(bPts); if (id.length < 2) return 0;
+    var a = bPts[id[0]], b = bPts[id[1]];
+    return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+  }
+  function pMid() {
+    var id = Object.keys(bPts), mx = 0, my = 0;
+    id.forEach(function (k) { mx += bPts[k].x; my += bPts[k].y; });
+    var r = bigStage.getBoundingClientRect();
+    return { x: mx / id.length - r.left, y: my / id.length - r.top };
+  }
+  bigStage.addEventListener('pointerdown', function (e) {
+    if (!bigOn) return;
+    try { bigStage.setPointerCapture(e.pointerId); } catch (err) { }
+    bPts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var n = Object.keys(bPts).length;
+    if (n === 1) { bDrag = true; bMoved = 0; bLX = e.clientX; bLY = e.clientY; bigStage.classList.add('drag'); }
+    else if (n === 2) { bDrag = false; bPinch0 = pDist(); bPinchK0 = bk; }
+  });
+  bigStage.addEventListener('pointermove', function (e) {
+    if (!bigOn || !bPts[e.pointerId]) return;
+    bPts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var n = Object.keys(bPts).length;
+    if (n >= 2) {
+      var d = pDist();
+      if (bPinch0 > 1 && d > 1) { var mp = pMid(); zoomAt(bPinchK0 * (d / bPinch0), mp.x, mp.y); }
+    } else if (bDrag) {
+      var dx = e.clientX - bLX, dy = e.clientY - bLY;
+      bLX = e.clientX; bLY = e.clientY;
+      bMoved += Math.abs(dx) + Math.abs(dy);
+      bx += dx; by += dy; clampPan(); applyBig();
+    }
+  });
+  function bigUp(e) {
+    if (bPts[e.pointerId]) delete bPts[e.pointerId];
+    if (!Object.keys(bPts).length) { bDrag = false; bPinch0 = 0; bigStage.classList.remove('drag'); }
+  }
+  bigStage.addEventListener('pointerup', bigUp);
+  bigStage.addEventListener('pointercancel', bigUp);
+  bigStage.addEventListener('wheel', function (e) {
+    if (!bigOn) return;
+    e.preventDefault();
+    var r = bigStage.getBoundingClientRect();
+    zoomAt(bk * (e.deltaY < 0 ? 1.14 : 1 / 1.14), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  var bTapT = 0, bTapX = 0, bTapY = 0;
+  bigStage.addEventListener('pointerup', function (e) {
+    var t = Date.now();
+    if (bMoved < 14 && t - bTapT < 320 && Math.abs(e.clientX - bTapX) < 30 && Math.abs(e.clientY - bTapY) < 30) {
+      var r = bigStage.getBoundingClientRect();
+      if (bk > fitK() * 1.6) bigFitAll();
+      else zoomAt(Math.min(bk * 2.2, bmax), e.clientX - r.left, e.clientY - r.top);
+      bTapT = 0;
+    } else { bTapT = t; bTapX = e.clientX; bTapY = e.clientY; }
+  });
+  addEventListener('resize', function () {
+    if (!bigOn) return;
+    bmin = Math.min(fitK(), bk) * 0.62;
+    clampPan(); applyBig();
+  });
+  document.getElementById('bigIn').addEventListener('click', function (e) { e.stopPropagation(); zoomAt(bk * 1.4); });
+  document.getElementById('bigOut').addEventListener('click', function (e) { e.stopPropagation(); zoomAt(bk / 1.4); });
+  document.getElementById('bigFit').addEventListener('click', function (e) { e.stopPropagation(); bigFitAll(); });
+  document.getElementById('bigClose').addEventListener('click', function (e) { e.stopPropagation(); closeBig(); });
+
+  var miniEl = document.getElementById('mini');
+  miniEl.addEventListener('click', function (e) { e.stopPropagation(); openBig(); });
+  document.getElementById('miniZoom').addEventListener('click', function (e) {
+    e.stopPropagation(); openBig();
+  });
+  addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeBig();
+    if (e.key === 'm' || e.key === 'M') toggleBig();
+  });
+  if (location.search.indexOf('map=1') >= 0) setTimeout(openBig, 200);
+
+  function zoneName() {
+    var x = pos.x, z = PZ(pos.z);          // 分区阈值按平面坐标（z 向北）写
+    for (var lk = 0; lk < LINKS.length; lk++) {
+      var lb = LINKS[lk];
+      if (LK.hit(lb, x, z)) return 'C↔D 连廊（' + (lk + 1) + '）';
+    }
+    if (x >= C_BOX.x0) {
+      var lx = x - CX, lz = z - CZ;
+      if (lz >= 49.3) return 'C 座 · 通往D座（连廊口）';
+      if (lz >= 37.1 && lx >= 27.2) return 'C 座 · 北廊（门厅）';
+      if (lz >= 20.1 && lx >= 41.0) return 'C 座 · 东纵廊';
+      if (lz >= 20.1 && lx >= 23.6) return 'C 座 · 中横廊';
+      /* 电梯厅：夹在电梯①②之间的横向通道，能一直通到东纵廊 */
+      if (lz >= 13.6 && lz <= 17.0 && lx >= 36.5 && lx < 41.0) return 'C 座 · 电梯厅';
+      if (lx >= 40.9) return 'C 座 · 东纵廊';
+      if (lx >= 23.6 && lx <= 27.3) return 'C 座 · 中纵廊';
+      if (lz >= 28.8 && lz <= 31.4) return 'C 座 · 西横廊';
+      if (lz >= 11.4 && lz <= 14.4 && lx < 25) return 'C 座 · 阶教202南廊';
+      if (lx >= 9.3 && lx <= 12.1 && lz <= 28.8) return 'C 座 · 西纵廊';
+      if (lx >= 9.5 && lx <= 12.1 && lz > 28.8) return 'C 座 · 西斜边出口';
+      if (lz <= 11.5) return 'C 座 · 南横廊';
+      if (lx <= 12.1) return 'C 座 · 西南廊';
+      return 'C 座 · 走廊';
+    }
+    if (z >= 33.0) return 'D 座 · 北横廊';
+    if (x <= 10.1 && z <= 33.4) return 'D 座 · 西纵廊';
+    if (z >= 20.0) return 'D 座 · 中部走廊';
+    if (z >= 11.0) return 'D 座 · D-312 廊';
+    if (x >= 34.0) return 'D 座 · 阶教前廊';
+    return 'D 座 · 南横廊';
+  }
+
+  // ============================================================
+  // 第一人称控制
+  // ============================================================
+  /* yaw：0 = 朝北，-π/2 = 朝东，π/2 = 朝西（与三维一致，北＝-z）
+     pos 存的是三维坐标（z 朝南）；URL 参数仍按平面坐标传（z 向北），方便对照俯视图 */
+  var yaw = -Math.PI / 2, pitch = 0.02;    // 初始朝东
+  var pos = { x: 12, z: TZ(34.6) };        // D 座北横廊（3F 入口廊）
+  (function () {
+    var q = location.search;
+    function num(k) { var m = new RegExp(k + '=(-?[\\d.]+)').exec(q); return m ? parseFloat(m[1]) : null; }
+    var qx = num('x'), qz = num('z'), qy = num('yaw'), qp = num('p');
+    if (qx !== null) pos.x = qx;
+    if (qz !== null) pos.z = TZ(qz);
+    if (qy !== null) yaw = qy;
+    if (qp !== null) pitch = qp;
+  })();
+  /* 截图/核对用：?hud=0 隐藏左上说明，?mini=0 隐藏右上俯视图 */
+  if (location.search.indexOf('hud=0') >= 0) document.getElementById('hud').style.display = 'none';
+  if (location.search.indexOf('mini=0') >= 0) document.getElementById('mini').style.display = 'none';
+  var keys = {};
+  var joy = { active: false, id: null, dx: 0, dy: 0 };
+  var look = { active: false, id: null, lx: 0, ly: 0 };
+  var hold = { yl: 0, yr: 0, pu: 0, pd: 0 };     // 右下十字键按住状态
+  var joyEl = document.getElementById('joy');
+  var knobEl = document.getElementById('joyKnob');
+  var gateEl = document.getElementById('gate');
+
+  /* 预览面板 / iframe 里，键盘事件只交给“有焦点”的文档。
+     点一下页面就主动把焦点抢回来，WASD 才收得到 */
+  function grabFocus() { try { window.focus(); } catch (e) { } }
+  addEventListener('pointerdown', grabFocus, true);
+  addEventListener('mousedown', grabFocus, true);
+
+  function closeGate() { gateEl.classList.add('off'); grabFocus(); }
+  document.getElementById('gateGo').addEventListener('click', function (e) { e.stopPropagation(); closeGate(); });
+  gateEl.addEventListener('click', closeGate);
+  if (location.search.indexOf('go=1') >= 0) gateEl.classList.add('off');
+
+  addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeGate(); closeBig(); }
+    if (!gateEl.classList.contains('off') && e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') closeGate();
+    keys[(e.key || '').toLowerCase()] = true;
+  });
+  addEventListener('keyup', function (e) { keys[(e.key || '').toLowerCase()] = false; });
+  /* 切走再切回来时按下的键会“粘住”，统一清空 */
+  addEventListener('blur', function () {
+    keys = {}; hold = { yl: 0, yr: 0, pu: 0, pd: 0 }; joyEnd(); look.active = false;
+  });
+
+  /* ---- 左下摇杆：pointer 事件，鼠标按住拖 / 触屏都走同一套 ---- */
+  function joyMove(e) {
+    var r = joyEl.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var dx = e.clientX - cx, dy = e.clientY - cy;
+    var max = r.width / 2 - 10, len = Math.sqrt(dx * dx + dy * dy);
+    if (len > max && len > 0) { dx = dx / len * max; dy = dy / len * max; }
+    joy.dx = dx / max; joy.dy = dy / max;
+    knobEl.style.transition = 'none';
+    knobEl.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
+  }
+  function joyEnd() {
+    joy.active = false; joy.id = null; joy.dx = 0; joy.dy = 0;
+    knobEl.style.transition = '';
+    knobEl.style.transform = 'translate(0,0)';
+    joyEl.classList.remove('act');
+  }
+  joyEl.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    joy.active = true; joy.id = e.pointerId; joyEl.classList.add('act');
+    try { joyEl.setPointerCapture(e.pointerId); } catch (err) { }
+    joyMove(e);
+  });
+  joyEl.addEventListener('pointermove', function (e) {
+    if (!joy.active || e.pointerId !== joy.id) return;
+    e.preventDefault(); joyMove(e);
+  });
+  joyEl.addEventListener('pointerup', function (e) { if (e.pointerId === joy.id) joyEnd(); });
+  joyEl.addEventListener('pointercancel', joyEnd);
+  joyEl.addEventListener('lostpointercapture', joyEnd);
+
+  /* ---- 右下十字键：按住连续转 ---- */
+  [['lkL', 'yl'], ['lkR', 'yr'], ['lkU', 'pu'], ['lkD', 'pd']].forEach(function (it) {
+    var b = document.getElementById(it[0]);
+    b.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      hold[it[1]] = 1; b.classList.add('on'); grabFocus();
+      try { b.setPointerCapture(e.pointerId); } catch (err) { }
+    });
+    function off() { hold[it[1]] = 0; b.classList.remove('on'); }
+    b.addEventListener('pointerup', off);
+    b.addEventListener('pointercancel', off);
+    b.addEventListener('pointerleave', off);
+    b.addEventListener('lostpointercapture', off);
+  });
+
+  /* ---- 按住画面拖动转头（canvas 上，鼠标与触屏共用）---- */
+  var cvEl = renderer.domElement;
+  cvEl.addEventListener('pointerdown', function (e) {
+    if (look.active) return;
+    look.active = true; look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY;
+    try { cvEl.setPointerCapture(e.pointerId); } catch (err) { }
+  });
+  cvEl.addEventListener('pointermove', function (e) {
+    if (!look.active || e.pointerId !== look.id) return;
+    var s = (e.pointerType === 'touch') ? 0.0045 : 0.0035;
+    yaw   -= (e.clientX - look.lx) * s;
+    pitch -= (e.clientY - look.ly) * s;
+    pitch = Math.max(-1.2, Math.min(1.2, pitch));
+    look.lx = e.clientX; look.ly = e.clientY;
+  });
+  function lookEnd(e) { if (look.active && (!e || e.pointerId === look.id)) look.active = false; }
+  cvEl.addEventListener('pointerup', lookEnd);
+  cvEl.addEventListener('pointercancel', lookEnd);
+  cvEl.addEventListener('lostpointercapture', lookEnd);
+
+  /* 调试/自检用：读当前位姿 */
+  window.__dbg = function () { return { x: pos.x, z: PZ(pos.z), yaw: yaw, pitch: pitch }; };
+
+  // ============================================================
+  // 主循环
+  // ============================================================
+  var clock = new THREE.Clock();
+  var frameNo = 0;
+  function tick() {
+    requestAnimationFrame(tick);
+    var dt = Math.min(clock.getDelta(), 0.05);
+
+    var ix = 0, iz = 0;
+    if (keys['w'] || keys['arrowup']) iz += 1;
+    if (keys['s'] || keys['arrowdown']) iz -= 1;
+    if (keys['a'] || keys['arrowleft']) ix -= 1;
+    if (keys['d'] || keys['arrowright']) ix += 1;
+    if (joy.active) { ix += joy.dx; iz += -joy.dy; }
+    var l = Math.hypot(ix, iz);
+    if (l > 1) { ix /= l; iz /= l; }
+
+    /* 右下十字键：按住连续转 */
+    if (hold.yl) yaw += 1.9 * dt;
+    if (hold.yr) yaw -= 1.9 * dt;
+    if (hold.pu) pitch = Math.min(1.2, pitch + 1.25 * dt);
+    if (hold.pd) pitch = Math.max(-1.2, pitch - 1.25 * dt);
+
+    var speed = (keys['shift'] ? 6.4 : 3.6) * dt;
+    var fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+    var rx =  Math.cos(yaw), rz = -Math.sin(yaw);
+    var dx = (fx * iz + rx * ix) * speed;
+    var dz = (fz * iz + rz * ix) * speed;
+
+    if (walkable(pos.x + dx, pos.z)) pos.x += dx;
+    if (walkable(pos.x, pos.z + dz)) pos.z += dz;
+
+    var gy = groundY(pos.x, pos.z);
+    camera.position.set(pos.x, gy + EYE, pos.z);
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+
+    renderer.render(scene, camera);
+    drawMini();
+    if ((frameNo++ & 5) === 0) miniPosEl.textContent = zoneName();
+  }
+  tick();
+
+  addEventListener('resize', function () {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    if (bigOn) { clampPan(); applyBig(); }
+  });
+
+  })();

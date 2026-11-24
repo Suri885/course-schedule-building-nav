@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#fff}canvas{display:block}</style></head>
+<body>
+<canvas id="cv" width="1400" height="1000"></canvas>
+<script src="plan-data.js"></script>
+<script>
+var p = new URLSearchParams(location.search);
+var w = { x0:+p.get('x0'), x1:+p.get('x1'), z0:+p.get('z0'), z1:+p.get('z1') };
+var ctx = document.getElementById('cv').getContext('2d');
+var m = FLOOR3.render(ctx, 1400, 1000, { world: w, fullLabels: true, pad: 24 });
+// 坐标网格
+if (m && m.px) {
+  ctx.save();
+  ctx.font = '12px monospace';
+  for (var x = Math.ceil(w.x0); x <= w.x1; x++) {
+    var X = m.px(x);
+    ctx.strokeStyle = (x % 5 === 0) ? 'rgba(200,0,0,.45)' : 'rgba(200,0,0,.14)';
+    ctx.beginPath(); ctx.moveTo(X, 0); ctx.lineTo(X, 1000); ctx.stroke();
+    if (x % 5 === 0) { ctx.fillStyle = '#c00'; ctx.fillText('x' + x, X + 2, 14); }
+  }
+  for (var z = Math.ceil(w.z0); z <= w.z1; z++) {
+    var Y = m.pz(z);
+    ctx.strokeStyle = (z % 5 === 0) ? 'rgba(0,90,200,.45)' : 'rgba(0,90,200,.14)';
+    ctx.beginPath(); ctx.moveTo(0, Y); ctx.lineTo(1400, Y); ctx.stroke();
+    if (z % 5 === 0) { ctx.fillStyle = '#06c'; ctx.fillText('z' + z, 4, Y - 3); }
+  }
+  ctx.restore();
+}
+</script>
+</body></html>

@@ -1,0 +1,425 @@
+<!--pages/remind/remind.wxml - 提醒板块：已确认 / 未确认 · 三色紧急度 · 长周期倒计时-->
+<view class="remind-container">
+
+  <!-- 顶部：日期 + 周次 + 颜色图例 -->
+  <view class="top-bar">
+    <view class="top-left">
+      <text class="date-text">{{todayLabel}}</text>
+      <text class="week-chip" wx:if="{{weekText}}">{{weekText}}</text>
+    </view>
+    <view class="top-right" bindtap="openLevelPanel">
+      <view class="legend">
+        <view class="legend-item"><text class="dot dot-red"></text><text class="legend-txt">红</text></view>
+        <view class="legend-item"><text class="dot dot-yellow"></text><text class="legend-txt">黄</text></view>
+        <view class="legend-item"><text class="dot dot-green"></text><text class="legend-txt">绿</text></view>
+      </view>
+      <text class="gear">⚙</text>
+    </view>
+  </view>
+
+  <view class="level-tip" bindtap="openLevelPanel">
+    <text class="level-tip-txt">{{levelsText}}</text>
+    <text class="level-tip-link">自定义 ›</text>
+  </view>
+
+  <!-- 分段：已确认 / 未确认 -->
+  <view class="seg">
+    <view class="seg-item {{tab === 'confirmed' ? 'seg-on' : ''}}" data-tab="confirmed" bindtap="switchTab">
+      <text class="seg-txt">已确认</text>
+      <text class="seg-num">{{confirmedCount}}</text>
+    </view>
+    <view class="seg-item {{tab === 'unconfirmed' ? 'seg-on' : ''}}" data-tab="unconfirmed" bindtap="switchTab">
+      <text class="seg-txt">未确认</text>
+      <text class="seg-num">{{unconfirmedCount}}</text>
+    </view>
+  </view>
+
+  <!-- ===================== 已确认 ===================== -->
+  <block wx:if="{{tab === 'confirmed'}}">
+
+    <!-- 红色事务汇总提示 -->
+    <view class="urgent-banner" wx:if="{{urgentCount > 0}}" bindtap="openLevelPanel">
+      <text class="urgent-banner-icon">⚠</text>
+      <text class="urgent-banner-txt">{{urgentCount}} 项已进入红色，已自动置顶到首页</text>
+    </view>
+
+    <!-- ===== 置顶区（可折叠）：置顶后同时显示在工作台首页 ===== -->
+    <block wx:if="{{pinnedList.length > 0}}">
+      <view class="group-head group-head-pin" data-key="pin" catchtap="toggleSection">
+        <view class="group-left">
+          <text class="group-title group-title-pin">📌 置顶区</text>
+          <text class="group-sub">{{pinnedList.length}} 项 · 首页同步显示</text>
+        </view>
+        <text class="group-fold">{{pinCollapsed ? '展开 ▾' : '收起 ▴'}}</text>
+      </view>
+
+      <block wx:if="{{!pinCollapsed}}">
+        <view
+          wx:for="{{pinnedList}}"
+          wx:key="id"
+          class="task-card card-pinned card-{{item.level}} {{item.level === 'red' ? 'card-urgent' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="openEdit"
+        >
+          <view class="task-colorbar"></view>
+          <view class="task-body">
+            <view class="task-row1">
+              <text class="task-title">{{item.title}}</text>
+              <text class="task-left">{{item.fixed ? '长期' : item.leftText}}</text>
+            </view>
+            <view class="task-row2">
+              <text class="task-badge badge-{{item.level}}">{{item.levelText}}</text>
+              <text class="task-deadline" wx:if="{{item.hasDeadline}}">截止 {{item.deadlineText}}</text>
+              <text class="task-deadline" wx:else>不设截止 · 长期有效</text>
+            </view>
+            <text class="task-note" wx:if="{{item.note}}">{{item.note}}</text>
+            <view class="pin-chip pin-on" data-id="{{item.id}}" catchtap="togglePin">
+              <text class="pin-txt">📌 已置顶 · 点击取消</text>
+            </view>
+          </view>
+          <view class="task-ops">
+            <view class="op op-done" data-id="{{item.id}}" catchtap="toggleDone">
+              <text class="op-txt">完成</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <!-- 待完成事务 -->
+    <view class="group-head" wx:if="{{pending.length > 0}}">
+      <text class="group-title">待完成</text>
+      <text class="group-sub">{{pending.length}} 项</text>
+    </view>
+
+    <view
+      wx:for="{{pending}}"
+      wx:key="id"
+      class="task-card card-{{item.level}} {{item.level === 'red' ? 'card-urgent' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="openEdit"
+    >
+      <view class="task-colorbar"></view>
+      <view class="task-body">
+        <view class="task-row1">
+          <text class="task-title">{{item.title}}</text>
+          <text class="task-left">{{item.leftText}}</text>
+        </view>
+        <view class="task-row2">
+          <text class="task-badge badge-{{item.level}}">{{item.levelText}}</text>
+          <text class="task-deadline" wx:if="{{item.hasDeadline}}">截止 {{item.deadlineText}}</text>
+          <text class="task-deadline" wx:else>未设截止时间</text>
+        </view>
+        <text class="task-note" wx:if="{{item.note}}">{{item.note}}</text>
+        <view class="pin-chip" data-id="{{item.id}}" catchtap="togglePin">
+          <text class="pin-txt">📌 置顶到首页</text>
+        </view>
+      </view>
+      <view class="task-ops">
+        <view class="op op-done" data-id="{{item.id}}" catchtap="toggleDone">
+          <text class="op-txt">完成</text>
+        </view>
+        <view class="op op-revoke" data-id="{{item.id}}" data-val="0" catchtap="setConfirmed">
+          <text class="op-txt">撤回</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 固定项目：不设截止日期，蓝紫色标注，可折叠 -->
+    <block wx:if="{{fixedList.length > 0}}">
+      <view class="group-head group-head-fixed" data-key="fixed" catchtap="toggleSection">
+        <view class="group-left">
+          <text class="group-title group-title-fixed">固定项目</text>
+          <text class="group-sub">长期有效 · 无截止日期</text>
+        </view>
+        <text class="group-fold">{{fixedCollapsed ? '展开 ▾' : '收起 ▴'}}</text>
+      </view>
+
+      <block wx:if="{{!fixedCollapsed}}">
+        <view
+          wx:for="{{fixedList}}"
+          wx:key="id"
+          class="task-card card-fixed"
+          data-id="{{item.id}}"
+          bindtap="openEdit"
+        >
+          <view class="task-colorbar bar-fixed"></view>
+          <view class="task-body">
+            <view class="task-row1">
+              <text class="task-title">{{item.title}}</text>
+            </view>
+            <view class="task-row2">
+              <text class="task-badge badge-fixed">固定项目</text>
+              <text class="task-deadline">不设截止 · 长期有效</text>
+            </view>
+            <text class="task-note" wx:if="{{item.note}}">{{item.note}}</text>
+            <view class="pin-chip" data-id="{{item.id}}" catchtap="togglePin">
+              <text class="pin-txt">📌 置顶到首页</text>
+            </view>
+          </view>
+          <view class="task-ops">
+            <view class="op op-done" data-id="{{item.id}}" catchtap="toggleDone">
+              <text class="op-txt">完成</text>
+            </view>
+            <view class="op op-del" data-id="{{item.id}}" catchtap="onDeleteFromCard">
+              <text class="op-txt">删除</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <!-- 空态 -->
+    <view class="empty-box" wx:if="{{pinnedList.length === 0 && pending.length === 0 && fixedList.length === 0}}">
+      <text class="empty-emoji">✅</text>
+      <text class="empty-title">没有待完成的已确认事务</text>
+      <text class="empty-sub">点底部 ＋ 新建事务，或到「未确认」里确认一条</text>
+    </view>
+
+    <!-- 已完成 -->
+    <block wx:if="{{doneCount > 0}}">
+      <view class="group-head group-head-done">
+        <text class="group-title group-title-done">已完成</text>
+        <text class="group-sub">{{doneCount}} 项</text>
+      </view>
+      <view
+        wx:for="{{doneList}}"
+        wx:key="id"
+        class="task-card card-done"
+        data-id="{{item.id}}"
+        bindtap="openEdit"
+      >
+        <view class="task-colorbar bar-done"></view>
+        <view class="task-body">
+          <view class="task-row1">
+            <text class="task-title task-title-done">{{item.title}}</text>
+            <text class="task-left task-left-done">{{item.hasDeadline ? item.leftText : ''}}</text>
+          </view>
+          <view class="task-row2">
+            <text class="task-deadline" wx:if="{{item.hasDeadline}}">截止 {{item.deadlineText}}</text>
+          </view>
+        </view>
+        <view class="task-ops">
+          <view class="op op-revoke" data-id="{{item.id}}" catchtap="toggleDone">
+            <text class="op-txt">恢复</text>
+          </view>
+          <view class="op op-del" data-id="{{item.id}}" catchtap="onDeleteFromCard">
+            <text class="op-txt">删除</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <!-- ===================== 未确认 ===================== -->
+  <block wx:else>
+    <view class="tip-bar">
+      <text class="tip-txt">未确认的事务不参与倒计时提醒。确认后才会按剩余天数显示红 / 黄 / 绿。</text>
+    </view>
+
+    <view
+      wx:for="{{unconfirmed}}"
+      wx:key="id"
+      class="task-card card-unconfirmed"
+      data-id="{{item.id}}"
+      bindtap="openEdit"
+    >
+      <view class="task-colorbar bar-gray"></view>
+      <view class="task-body">
+        <view class="task-row1">
+          <text class="task-title">{{item.title}}</text>
+        </view>
+        <view class="task-row2">
+          <text class="task-badge badge-none">待确认</text>
+          <text class="task-deadline" wx:if="{{item.hasDeadline}}">计划截止 {{item.deadlineText}}</text>
+          <text class="task-deadline" wx:else>未设截止时间</text>
+        </view>
+        <text class="task-note" wx:if="{{item.note}}">{{item.note}}</text>
+      </view>
+      <view class="task-ops">
+        <view class="op op-confirm" data-id="{{item.id}}" data-val="1" catchtap="setConfirmed">
+          <text class="op-txt">确认</text>
+        </view>
+        <view class="op op-del" data-id="{{item.id}}" catchtap="onDeleteFromCard">
+          <text class="op-txt">删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-box" wx:if="{{unconfirmed.length === 0}}">
+      <text class="empty-emoji">🗂</text>
+      <text class="empty-title">没有未确认的事务</text>
+      <text class="empty-sub">新建事务时会先存为未确认，确认后再开始倒计时</text>
+    </view>
+  </block>
+
+  <view class="bottom-pad"></view>
+
+  <!-- 两处独立加号：当前页签即决定新事务的状态，不用手选 -->
+  <view class="add-bar">
+    <view class="add-bar-btn {{tab === 'confirmed' ? 'add-bar-confirmed' : 'add-bar-unconfirmed'}}" bindtap="openForm">
+      <text class="add-bar-plus">＋</text>
+      <text class="add-bar-txt">{{tab === 'confirmed' ? '新建已确认事务' : '新建待确认事务'}}</text>
+    </view>
+  </view>
+
+  <!-- ===================== 新增 / 编辑面板 ===================== -->
+  <view class="mask" wx:if="{{showForm}}" bindtap="closeForm">
+    <view class="panel" catchtap="noop">
+      <view class="panel-head">
+        <text class="panel-title">{{editingId ? '编辑事务' : '新建事务'}}</text>
+        <view class="panel-close" bindtap="closeForm"><text class="panel-close-txt">✕</text></view>
+      </view>
+
+      <scroll-view scroll-y class="panel-body">
+        <view class="field">
+          <text class="field-label">事务名称</text>
+          <input
+            class="field-input"
+            value="{{fTitle}}"
+            bindinput="onTitleInput"
+            placeholder="例如：交数据结构实验报告"
+            maxlength="40"
+            confirm-type="done"
+          />
+        </view>
+
+        <view class="field">
+          <text class="field-label">备注</text>
+          <input
+            class="field-input"
+            value="{{fNote}}"
+            bindinput="onNoteInput"
+            placeholder="可不填，例如地点 / 提交方式"
+            maxlength="60"
+          />
+        </view>
+
+        <!-- 固定项目开关 -->
+        <view class="fixed-row" bindtap="onToggleFixed">
+          <view class="fixed-left">
+            <text class="fixed-title">固定项目</text>
+            <text class="fixed-desc">不设截止日期，长期有效，列表中用蓝色标注</text>
+          </view>
+          <view class="switch {{fFixed ? 'switch-on' : ''}}">
+            <view class="switch-dot"></view>
+          </view>
+        </view>
+
+        <view class="field" wx:if="{{!fFixed}}">
+          <text class="field-label">截止时间（精确到某日某时）</text>
+          <view class="datetime-row">
+            <picker mode="date" value="{{fDate}}" bindchange="onDateChange">
+              <view class="datetime-pick">
+                <text class="datetime-txt {{fDate ? '' : 'datetime-empty'}}">{{fDate || '选择日期'}}</text>
+              </view>
+            </picker>
+            <picker mode="time" value="{{fTime}}" bindchange="onTimeChange" disabled="{{!fDate}}">
+              <view class="datetime-pick {{fDate ? '' : 'datetime-disabled'}}">
+                <text class="datetime-txt">{{fDate ? fTime : '--:--'}}</text>
+              </view>
+            </picker>
+            <view class="datetime-clear" wx:if="{{fDate}}" bindtap="onClearDate">
+              <text class="datetime-clear-txt">清除</text>
+            </view>
+          </view>
+          <view class="quick-row">
+            <view class="quick-chip" wx:for="{{quickDates}}" wx:key="label" data-date="{{item.date}}" bindtap="onQuickDate">
+              <text class="quick-chip-txt">{{item.label}}</text>
+            </view>
+          </view>
+          <text class="field-hint">支持数周至数月的长周期任务，倒计时会显示剩余天数与小时</text>
+        </view>
+
+        <view class="field" wx:else>
+          <text class="field-hint">固定项目不设截止时间，不进入红黄绿倒计时，也不会出现在首页的紧急提醒里。</text>
+        </view>
+
+        <view class="form-state">
+          <text class="form-state-label">状态</text>
+          <text class="form-state-val {{fConfirm ? 'state-on' : 'state-off'}}">{{fConfirm ? '已确认' : '未确认'}}</text>
+          <text class="form-state-tip" wx:if="{{!editingId}}">由当前页签自动决定</text>
+        </view>
+      </scroll-view>
+
+      <view class="panel-foot">
+        <view class="foot-btn foot-del" wx:if="{{editingId}}" bindtap="onDeleteFromForm">
+          <text class="foot-btn-txt foot-txt-del">删除</text>
+        </view>
+        <view class="foot-btn foot-cancel" bindtap="closeForm">
+          <text class="foot-btn-txt">取消</text>
+        </view>
+        <view class="foot-btn foot-save" bindtap="saveTask">
+          <text class="foot-btn-txt foot-txt-save">{{editingId ? '保存' : '添加'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===================== 三色阈值设置面板 ===================== -->
+  <view class="mask" wx:if="{{showLevelPanel}}" bindtap="closeLevelPanel">
+    <view class="panel" catchtap="noop">
+      <view class="panel-head">
+        <text class="panel-title">颜色规则</text>
+        <view class="panel-close" bindtap="closeLevelPanel"><text class="panel-close-txt">✕</text></view>
+      </view>
+
+      <scroll-view scroll-y class="panel-body">
+        <text class="panel-tip">按「剩余天数」决定颜色。数字可加减调整，三项必须依次变大（红 &lt; 黄 &lt; 绿）。</text>
+
+        <view class="lv-row">
+          <view class="lv-dot dot-red"></view>
+          <text class="lv-name">红色</text>
+          <text class="lv-desc">剩余 ≤</text>
+          <view class="stepper">
+            <view class="step" data-key="red" data-delta="-1" bindtap="onLevelStep"><text class="step-txt">−</text></view>
+            <text class="step-val">{{lvRed}}</text>
+            <view class="step" data-key="red" data-delta="1" bindtap="onLevelStep"><text class="step-txt">＋</text></view>
+          </view>
+          <text class="lv-unit">天</text>
+        </view>
+
+        <view class="lv-row">
+          <view class="lv-dot dot-yellow"></view>
+          <text class="lv-name">黄色</text>
+          <text class="lv-desc">剩余 ≤</text>
+          <view class="stepper">
+            <view class="step" data-key="yellow" data-delta="-1" bindtap="onLevelStep"><text class="step-txt">−</text></view>
+            <text class="step-val">{{lvYellow}}</text>
+            <view class="step" data-key="yellow" data-delta="1" bindtap="onLevelStep"><text class="step-txt">＋</text></view>
+          </view>
+          <text class="lv-unit">天</text>
+        </view>
+
+        <view class="lv-row">
+          <view class="lv-dot dot-green"></view>
+          <text class="lv-name">绿色</text>
+          <text class="lv-desc">剩余 ≤</text>
+          <view class="stepper">
+            <view class="step" data-key="green" data-delta="-1" bindtap="onLevelStep"><text class="step-txt">−</text></view>
+            <text class="step-val">{{lvGreen}}</text>
+            <view class="step" data-key="green" data-delta="1" bindtap="onLevelStep"><text class="step-txt">＋</text></view>
+          </view>
+          <text class="lv-unit">天</text>
+        </view>
+
+        <text class="lv-preview">{{lvPreview}}</text>
+
+        <view class="quick-row">
+          <view class="quick-chip" data-preset="7,14,30" bindtap="onLevelPreset"><text class="quick-chip-txt">默认 7/14/30</text></view>
+          <view class="quick-chip" data-preset="3,7,15" bindtap="onLevelPreset"><text class="quick-chip-txt">紧凑 3/7/15</text></view>
+          <view class="quick-chip" data-preset="1,3,7" bindtap="onLevelPreset"><text class="quick-chip-txt">临时 1/3/7</text></view>
+        </view>
+      </scroll-view>
+
+      <view class="panel-foot">
+        <view class="foot-btn foot-cancel" bindtap="resetLevels">
+          <text class="foot-btn-txt">恢复默认</text>
+        </view>
+        <view class="foot-btn foot-save" bindtap="saveLevels">
+          <text class="foot-btn-txt foot-txt-save">保存</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

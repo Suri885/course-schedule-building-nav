@@ -1,0 +1,193 @@
+/* pages/section-detail/section-detail.wxss */
+.sd-bg {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #eaf1fb 0%, #f4f7fc 60%, #eef3fb 100%);
+  padding-bottom: 60rpx;
+}
+
+/* 板块头部 */
+.sd-head {
+  padding: 48rpx 40rpx 40rpx;
+  color: #fff;
+}
+
+.sd-head-name {
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.sd-head-desc {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  opacity: 0.9;
+  display: block;
+}
+
+.sd-head-score {
+  margin-top: 24rpx;
+  display: flex;
+  align-items: baseline;
+}
+
+.sd-head-got {
+  font-size: 56rpx;
+  font-weight: 700;
+}
+
+.sd-head-max {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.sd-head-bar {
+  margin-top: 16rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.sd-head-bar-in {
+  height: 100%;
+  background: #FFD66B;
+  border-radius: 999rpx;
+  transition: width 0.3s ease;
+}
+
+.sd-hint {
+  margin: 30rpx 28rpx 0;
+}
+
+.sd-hint-text {
+  font-size: 23rpx;
+  color: #8a97a8;
+}
+
+/* 模块卡 */
+.mod-card {
+  margin: 20rpx 28rpx 0;
+  background: #fff;
+  border-radius: 22rpx;
+  border-left: 10rpx solid #185FA5;
+  padding: 28rpx 28rpx 26rpx;
+  box-shadow: 0 8rpx 20rpx rgba(31, 45, 61, 0.06);
+}
+
+.mod-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mod-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.mod-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.mod-sub {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #9aa6b5;
+}
+
+.mod-arrow {
+  font-size: 28rpx;
+  color: #185FA5;
+  font-weight: 600;
+}
+
+.mod-score {
+  margin-top: 18rpx;
+  display: flex;
+  align-items: baseline;
+}
+
+.mod-got {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #185FA5;
+}
+
+.mod-max {
+  font-size: 24rpx;
+  color: #9aa6b5;
+  margin-left: 4rpx;
+}
+
+.mod-remain {
+  font-size: 21rpx;
+  color: #C0393D;
+  background: #FDECEC;
+  border-radius: 999rpx;
+  padding: 4rpx 14rpx;
+  margin-left: auto;
+}
+
+.mod-bar {
+  margin-top: 12rpx;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: #eef2f7;
+  overflow: hidden;
+}
+
+.mod-bar-in {
+  height: 100%;
+  border-radius: 999rpx;
+  transition: width 0.3s ease;
+}
+
+.sd-head-foot {
+  margin-top: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sd-head-remain {
+  font-size: 23rpx;
+  font-weight: 600;
+  color: #ffffff;
+  opacity: 0.95;
+}
+
+.sd-head-pending {
+  font-size: 20rpx;
+  color: #FFF0C9;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999rpx;
+  padding: 4rpx 16rpx;
+}
+
+.sd-note {
+  margin: 24rpx 28rpx 0;
+  padding: 18rpx 24rpx;
+  background: #FFF8E8;
+  border: 1rpx solid #F2DFB4;
+  border-radius: 16rpx;
+}
+
+.sd-note-txt {
+  font-size: 21rpx;
+  color: #8a6d3b;
+  line-height: 1.6;
+}
+
+.sd-bottom-tip {
+  margin: 30rpx 28rpx 0;
+  padding: 24rpx 28rpx;
+  background: #fff;
+  border-radius: 18rpx;
+}
+
+.sd-bottom-text {
+  font-size: 23rpx;
+  color: #9aa6b5;
+  line-height: 1.7;
+}

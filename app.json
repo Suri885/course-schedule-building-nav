@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/second-class/second-class",
+    "pages/section-detail/section-detail",
+    "pages/module-tasks/module-tasks",
+    "pages/task-record/task-record",
+    "pages/index/index",
+    "pages/add-course/add-course",
+    "pages/import/import",
+    "pages/memo/memo",
+    "pages/remind/remind",
+    "pages/review/review",
+    "pages/review-edit/review-edit",
+    "pages/review-mask/review-mask",
+    "pages/review-study/review-study",
+    "pages/extmap/extmap",
+    "pages/entrance/entrance",
+    "pages/scene/scene",
+    "pages/search/search"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "我的课表",
+    "backgroundColor": "#f5f5f5",
+    "enablePullDownRefresh": false
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

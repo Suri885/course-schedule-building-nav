@@ -1,0 +1,61 @@
+<!--pages/review-study/review-study.wxml - 单条复习-->
+<view class="rs-bg" wx:if="{{item}}">
+
+  <view class="rs-top">
+    <view class="rs-top-left">
+      <text class="rs-title">{{item.title}}</text>
+      <text class="rs-sub">{{indexText}}<text wx:if="{{indexText}}"> · </text>{{stageText}}</text>
+    </view>
+    <view class="rs-edit" bindtap="goEdit">
+      <text class="rs-edit-txt">编辑</text>
+    </view>
+  </view>
+
+  <!-- 题干文字 -->
+  <view class="rs-card" wx:if="{{item.text}}">
+    <text class="rs-question">{{item.text}}</text>
+  </view>
+
+  <!-- 图片：默认遮盖图，点一下看原图 -->
+  <view class="rs-card rs-img-card" wx:if="{{currentImage}}" bindtap="toggleOriginal">
+    <image class="rs-img" src="{{currentImage}}" mode="widthFix" />
+    <text class="rs-img-hint" wx:if="{{hasMask}}">{{showOriginal ? '当前是原图 · 点击回到遮盖图' : '已遮盖 · 点击查看原图'}}</text>
+    <text class="rs-img-hint" wx:else>点击可放大查看</text>
+  </view>
+
+  <!-- 视频 -->
+  <view class="rs-card" wx:if="{{item.video}}">
+    <video class="rs-video" src="{{item.video}}" controls object-fit="contain"></video>
+  </view>
+
+  <!-- 答案 -->
+  <view class="rs-card rs-answer-card" wx:if="{{showAnswer}}">
+    <text class="rs-label">答案 / 原文</text>
+    <text class="rs-answer" wx:if="{{!answerEmpty}}">{{item.answer}}</text>
+    <text class="rs-answer-empty" wx:else>还没填答案，点右上角「编辑」补充</text>
+  </view>
+
+  <view class="rs-show" wx:if="{{!showAnswer}}" bindtap="showAnswerTap">
+    <text class="rs-show-txt">显示答案</text>
+  </view>
+
+  <!-- 已完全学会：移出每日复习队列 -->
+  <view class="rs-mastered" wx:if="{{mastered}}">
+    <text class="rs-mastered-txt">🧠 已标记为完全学会，不再进入每日复习</text>
+    <text class="rs-mastered-undo" bindtap="toggleMastered">取消标记</text>
+  </view>
+  <view class="rs-master" wx:else bindtap="toggleMastered">
+    <text class="rs-master-txt">已经完全学会这条了？点这里移出复习队列</text>
+  </view>
+
+  <view class="rs-pad"></view>
+
+  <view class="rs-actions">
+    <view class="rs-btn rs-btn-fail" data-ok="0" bindtap="mark">
+      <text class="rs-btn-txt rs-txt-fail">没记住</text>
+    </view>
+    <view class="rs-btn rs-btn-ok" data-ok="1" bindtap="mark">
+      <text class="rs-btn-txt rs-txt-ok">记住了</text>
+    </view>
+  </view>
+</view>

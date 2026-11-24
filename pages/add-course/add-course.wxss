@@ -1,0 +1,264 @@
+/* pages/add-course/add-course.wxss - 添加课程表单样式 */
+
+.form-page {
+  padding: 24rpx;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 折叠屏/平板展开态：表单不横向铺满，居中显示 */
+@media (min-width: 550px) {
+  .form-page {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+}
+
+/* ===== 基础表单组 ===== */
+.form-group {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx 30rpx;
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+}
+
+.form-label.required::after {
+  content: ' *';
+  color: #e64340;
+}
+
+.form-input {
+  font-size: 32rpx;
+  color: #333;
+  height: 60rpx;
+}
+
+/* 教师和教室并排 */
+.form-row {
+  display: flex;
+  gap: 24rpx;
+}
+
+.form-group.half {
+  flex: 1;
+}
+
+/* ===== 卡片 ===== */
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 10rpx 30rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-title {
+  font-size: 26rpx;
+  color: #999;
+  padding: 24rpx 0 8rpx;
+}
+
+.card-sub {
+  font-size: 22rpx;
+  color: #ccc;
+}
+
+/* ===== 选择器行 ===== */
+.picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.card .picker-item:last-child {
+  border-bottom: none;
+}
+
+.picker-label {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.picker-value {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 30rpx;
+  color: #185FA5;
+}
+
+.picker-arrow {
+  color: #ccc;
+  font-size: 32rpx;
+}
+
+/* ===== 自定义周次 ===== */
+.custom-weeks {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 20rpx 0 8rpx;
+}
+
+.week-chip {
+  flex: 1;
+  background: #f5f8fc;
+  border-radius: 14rpx;
+  padding: 16rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.week-chip-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.week-chip-value {
+  font-size: 30rpx;
+  color: #185FA5;
+  font-weight: 500;
+}
+
+.week-chip-sep {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* ===== 颜色选择 ===== */
+.color-row {
+  display: flex;
+  gap: 28rpx;
+  padding: 24rpx 0 12rpx;
+  flex-wrap: wrap;
+}
+
+.color-dot {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 4rpx solid transparent;
+  transition: all 0.15s;
+}
+
+.color-dot-active {
+  border-color: #333;
+  transform: scale(1.12);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.12);
+}
+
+/* ===== 保存按钮 ===== */
+.save-btn {
+  background: #185FA5;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  text-align: center;
+  padding: 26rpx 0;
+  border-radius: 20rpx;
+  margin-top: 12rpx;
+}
+
+.save-btn:active {
+  background: #0C447C;
+}
+
+/* 批量模式：次要按钮 */
+.save-btn-ghost {
+  background: #ffffff;
+  color: #4a5a6a;
+  border: 2rpx solid #dde3ec;
+  margin-top: 18rpx;
+}
+
+/* ===== 批量添加提示条 ===== */
+.batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(120deg, #EEF4FD 0%, #E6F1FB 100%);
+  border: 2rpx solid #cfe0f4;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 22rpx;
+}
+
+.batch-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.batch-title {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #185FA5;
+}
+
+.batch-sub {
+  font-size: 19rpx;
+  color: #5a7899;
+  line-height: 1.5;
+  margin-top: 6rpx;
+}
+
+.batch-count {
+  font-size: 20rpx;
+  color: #185FA5;
+  margin-top: 8rpx;
+}
+
+.batch-done {
+  flex-shrink: 0;
+  background: #185FA5;
+  border-radius: 999rpx;
+  padding: 12rpx 28rpx;
+  margin-left: 16rpx;
+}
+
+.batch-done-txt {
+  font-size: 23rpx;
+  color: #ffffff;
+}
+
+.bottom-space {
+  height: 40rpx;
+}
+
+/* ===== 实时冲突横幅 ===== */
+.conflict-banner {
+  background: #FEE2E2;
+  border: 1rpx solid #FCA5A5;
+  border-radius: 20rpx;
+  padding: 20rpx 30rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.conflict-banner-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 8rpx;
+}
+
+.conflict-item {
+  font-size: 24rpx;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+@media (min-width: 550px) {
+  .conflict-banner { max-width: 700px; margin: 0 auto 24rpx; }
+  .conflict-banner-title { font-size: 15px; }
+  .conflict-item { font-size: 13px; }
+}

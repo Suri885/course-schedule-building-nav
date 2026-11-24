@@ -1,0 +1,132 @@
+<!--pages/review/review.wxml - 错题与背诵：今日复习 + 总资料库-->
+<view class="rv-bg">
+
+  <!-- 顶部 -->
+  <view class="rv-head">
+    <view class="rv-head-left">
+      <text class="rv-title">错题与背诵</text>
+      <text class="rv-date">{{todayLabel}} · 艾宾浩斯复习</text>
+    </view>
+    <view class="rv-head-stat">
+      <text class="rv-stat-num">{{stats.due}}</text>
+      <text class="rv-stat-label">今日待复习</text>
+    </view>
+  </view>
+
+  <!-- 统计 -->
+  <view class="rv-cards">
+    <view class="rv-mini">
+      <text class="rv-mini-num">{{stats.total}}</text>
+      <text class="rv-mini-label">资料总数</text>
+    </view>
+    <view class="rv-mini">
+      <text class="rv-mini-num rv-mini-accent">{{stats.due}}</text>
+      <text class="rv-mini-label">今日待复习</text>
+    </view>
+    <view class="rv-mini">
+      <text class="rv-mini-num">{{stats.mastered}}</text>
+      <text class="rv-mini-label">已走完全程</text>
+    </view>
+  </view>
+
+  <!-- 分段 -->
+  <view class="rv-seg">
+    <view class="rv-seg-item {{tab === 'due' ? 'rv-seg-on' : ''}}" data-tab="due" bindtap="switchTab">
+      <text>今日复习</text>
+      <text class="rv-seg-num">{{stats.due}}</text>
+    </view>
+    <view class="rv-seg-item {{tab === 'library' ? 'rv-seg-on' : ''}}" data-tab="library" bindtap="switchTab">
+      <text>总资料库</text>
+      <text class="rv-seg-num">{{stats.total}}</text>
+    </view>
+  </view>
+
+  <!-- ===== 今日复习 ===== -->
+  <block wx:if="{{tab === 'due'}}">
+    <view class="rv-tip">
+      <text class="rv-tip-txt">复习节奏：{{planTip}}</text>
+    </view>
+
+    <view class="rv-tip rv-tip-link" wx:if="{{unscheduledCount > 0}}" data-tab="library" bindtap="switchTab">
+      <text class="rv-tip-txt">还有 {{unscheduledCount}} 份资料未加入复习计划，点这里去资料库添加 ›</text>
+    </view>
+
+    <view class="rv-card" wx:for="{{dueList}}" wx:key="id" data-id="{{item.id}}" bindtap="goStudy">
+      <image class="rv-cover" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+      <view class="rv-card-main">
+        <view class="rv-card-row1">
+          <text class="rv-card-title">{{item.title}}</text>
+          <text class="rv-badge {{item.overdue ? 'rv-badge-red' : ''}}">{{item.overdue ? '已逾期' : item.stageText}}</text>
+        </view>
+        <text class="rv-card-sub" wx:if="{{item.text}}">{{item.text}}</text>
+        <view class="rv-card-foot">
+          <text class="rv-card-type">{{item.typeText}} · 已复习 {{item.total}} 次</text>
+          <text class="rv-card-go">去复习 ›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="rv-empty" wx:if="{{dueList.length === 0}}">
+      <text class="rv-empty-emoji">🌱</text>
+      <text class="rv-empty-title">今天没有要复习的内容</text>
+      <text class="rv-empty-sub">复习节点：当天 → 1 → 2 → 4 → 7 → 15 → 30 天 → 2/3/4 个月 → 半年；学会后可一键移出队列</text>
+    </view>
+  </block>
+
+  <!-- ===== 总资料库 ===== -->
+  <block wx:else>
+    <view class="rv-search">
+      <text class="rv-search-icon">🔍</text>
+      <input
+        class="rv-search-input"
+        placeholder="按资料名称搜索，如：政治 第三章"
+        value="{{keyword}}"
+        bindinput="onSearch"
+        confirm-type="search"
+      />
+      <text class="rv-search-clear" wx:if="{{keyword}}" bindtap="clearSearch">✕</text>
+    </view>
+
+    <view class="rv-lib-count">
+      共 {{allList.length}} 份资料<text wx:if="{{unscheduledCount > 0}}"> · {{unscheduledCount}} 份未加入复习计划</text>
+    </view>
+
+    <view class="rv-lib-item" wx:for="{{allList}}" wx:key="id">
+      <view class="rv-lib-main" data-id="{{item.id}}" bindtap="goEdit">
+        <view class="rv-card-row1">
+          <text class="rv-lib-title">{{item.title}}</text>
+          <text class="rv-badge {{item.scheduled ? (item.mastered ? 'rv-badge-ok' : '') : 'rv-badge-mute'}}">{{item.stageText}}</text>
+        </view>
+        <text class="rv-card-sub" wx:if="{{item.text}}">{{item.text}}</text>
+        <text class="rv-lib-next" wx:if="{{item.scheduled}}">下次复习：{{item.nextText}}</text>
+        <text class="rv-lib-next rv-lib-next-mute" wx:else>未加入复习计划，点右侧按钮开始排期</text>
+      </view>
+      <view class="rv-lib-ops">
+        <view class="rv-op rv-op-go" wx:if="{{item.scheduled}}" data-id="{{item.id}}" catchtap="goStudy">
+          <text class="rv-op-txt">复习</text>
+        </view>
+        <view class="rv-op rv-op-add" wx:else data-id="{{item.id}}" data-on="1" catchtap="toggleScheduled">
+          <text class="rv-op-txt">加入复习计划</text>
+        </view>
+        <view class="rv-op" wx:if="{{item.scheduled}}" data-id="{{item.id}}" data-on="0" catchtap="toggleScheduled">
+          <text class="rv-op-txt rv-op-del">移出计划</text>
+        </view>
+        <view class="rv-op" data-id="{{item.id}}" catchtap="deleteItem">
+          <text class="rv-op-txt rv-op-del">删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="rv-empty" wx:if="{{allList.length === 0}}">
+      <text class="rv-empty-emoji">📚</text>
+      <text class="rv-empty-title">{{keyword ? '没有匹配的资料' : '资料库还是空的'}}</text>
+      <text class="rv-empty-sub">{{keyword ? '换个关键字试试' : '点右下 ＋ 添加第一条错题或背诵内容'}}</text>
+    </view>
+  </block>
+
+  <view class="rv-pad"></view>
+
+  <view class="rv-fab" bindtap="goEdit">
+    <text class="rv-fab-icon">＋</text>
+  </view>
+</view>

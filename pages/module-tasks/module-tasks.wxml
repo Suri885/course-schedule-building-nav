@@ -1,0 +1,49 @@
+<!--pages/module-tasks/module-tasks.wxml - 模块任务列表（按项核算，进度与明细一致）-->
+<view class="mt-bg" wx:if="{{section}}">
+
+  <!-- 模块进度头 -->
+  <view class="mt-head" style="background: {{section.color}};">
+    <text class="mt-head-title">{{typeLabel}}</text>
+    <text class="mt-head-sub">{{section.name}}</text>
+    <view class="mt-head-score">
+      <text class="mt-head-got">{{moduleGot}}</text>
+      <text class="mt-head-max"> / {{moduleMax}} 分</text>
+    </view>
+    <view class="mt-head-bar">
+      <view class="mt-head-bar-in" style="width: {{moduleMax ? (moduleGot/moduleMax*100 > 100 ? 100 : moduleGot/moduleMax*100) : 0}}%;"></view>
+    </view>
+    <view class="mt-head-foot">
+      <text class="mt-head-remain">还差 {{moduleRemain}} 分</text>
+      <text class="mt-head-pending" wx:if="{{modulePending > 0}}">待确认 +{{modulePending}} 分</text>
+    </view>
+  </view>
+
+  <!-- 口径说明：模块满分按办法规定封顶 -->
+  <view class="mt-note">
+    <text class="mt-note-txt">模块满分 {{officialMax}} 分（办法规定）。下列各条细则上限之和大于它时，超出部分不重复计入，模块得分按 {{moduleMax}} 分封顶。</text>
+  </view>
+
+  <!-- 任务卡片：首屏展示主要任务内容，点进去看详细评分标注 -->
+  <view class="mt-task" wx:for="{{tasks}}" wx:key="id" wx:for-item="t" data-task="{{t.id}}" bindtap="goDetail">
+    <view class="mt-task-main">
+      <text class="mt-task-title">{{t.title}}</text>
+      <text class="mt-task-content">{{t.content}}</text>
+      <view class="mt-task-tags" wx:if="{{t.pending > 0 || t.penalty}}">
+        <text class="mt-task-tag tag-pending" wx:if="{{t.pending > 0}}">待确认 +{{t.pending}}</text>
+        <text class="mt-task-tag tag-penalty" wx:if="{{t.penalty}}">扣分项</text>
+      </view>
+    </view>
+    <view class="mt-task-right">
+      <view class="mt-task-score">
+        <text class="mt-task-got">{{t.got}}</text>
+        <text class="mt-task-cap">/{{t.cap}}</text>
+      </view>
+      <text class="mt-task-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="mt-bottom-tip">
+    <text class="mt-bottom-text">点击任一条任务，查看详细评分标注并登记加分记录。</text>
+    <text class="mt-bottom-text mt-bottom-sub">登记后需在学校正式系统申请通过，回到任务页点「确认加分」才计入得分。</text>
+  </view>
+</view>

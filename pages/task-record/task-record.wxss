@@ -1,0 +1,511 @@
+/* pages/task-record/task-record.wxss */
+.tr-bg {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #eaf1fb 0%, #f4f7fc 60%, #eef3fb 100%);
+  padding: 28rpx 28rpx 60rpx;
+  box-sizing: border-box;
+}
+
+/* 任务信息头 */
+.tr-head {
+  background: #fff;
+  border-radius: 20rpx;
+  border-left: 10rpx solid #185FA5;
+  padding: 24rpx 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8rpx 20rpx rgba(31, 45, 61, 0.06);
+}
+
+.tr-head-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-right: 16rpx;
+}
+
+.tr-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.tr-sub {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #9aa6b5;
+}
+
+.tr-head-score {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+}
+
+.tr-head-got {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #185FA5;
+}
+
+.tr-head-cap {
+  font-size: 24rpx;
+  color: #9aa6b5;
+}
+
+/* 信息块 */
+.tr-box {
+  margin-top: 22rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx 26rpx;
+  box-shadow: 0 8rpx 20rpx rgba(31, 45, 61, 0.06);
+}
+
+.tr-box-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #185FA5;
+  margin-bottom: 12rpx;
+}
+
+.tr-box-text {
+  font-size: 26rpx;
+  color: #4a5568;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.tr-criteria {
+  color: #34404f;
+}
+
+/* 新建记录表单 */
+.tr-form {
+  margin-top: 22rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 26rpx;
+  box-shadow: 0 8rpx 20rpx rgba(31, 45, 61, 0.06);
+}
+
+.tr-form-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+  display: block;
+  margin-bottom: 18rpx;
+}
+
+.tr-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  background: #f5f7fa;
+  border-radius: 14rpx;
+  padding: 20rpx;
+  font-size: 27rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.tr-img-row {
+  margin-top: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.tr-img-add {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 14rpx;
+  border: 2rpx dashed #c4cedb;
+  background: #f7f9fc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tr-img-add-icon {
+  font-size: 50rpx;
+  color: #9aa6b5;
+  line-height: 1;
+}
+
+.tr-img-add-text {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #9aa6b5;
+}
+
+.tr-img-item {
+  position: relative;
+  width: 150rpx;
+  height: 150rpx;
+}
+
+.tr-img {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 14rpx;
+}
+
+.tr-img-del {
+  position: absolute;
+  top: -14rpx;
+  right: -14rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 30rpx;
+  text-align: center;
+  line-height: 40rpx;
+}
+
+/* 加分记录填写 */
+.tr-score-row {
+  margin-top: 22rpx;
+  display: flex;
+  align-items: center;
+  background: #f5f7fa;
+  border-radius: 14rpx;
+  padding: 16rpx 20rpx;
+}
+
+.tr-score-label {
+  font-size: 27rpx;
+  color: #4a5568;
+  flex-shrink: 0;
+}
+
+.tr-score-input {
+  flex: 1;
+  margin: 0 16rpx;
+  font-size: 30rpx;
+  color: #185FA5;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tr-score-unit {
+  font-size: 26rpx;
+  color: #9aa6b5;
+  flex-shrink: 0;
+}
+
+.tr-save {
+  margin-top: 24rpx;
+  background: #185FA5;
+  border-radius: 14rpx;
+  padding: 22rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tr-save:active {
+  background: #0C447C;
+}
+
+.tr-save-text {
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+/* 历史记录 */
+.tr-list-title {
+  margin: 34rpx 6rpx 16rpx;
+}
+
+.tr-list-title-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.tr-empty {
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 40rpx;
+  text-align: center;
+}
+
+.tr-empty-text {
+  font-size: 25rpx;
+  color: #b0b9c6;
+}
+
+.tr-record {
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 6rpx 16rpx rgba(31, 45, 61, 0.05);
+}
+
+.tr-record-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.tr-record-time {
+  font-size: 22rpx;
+  color: #aab4c0;
+}
+
+.tr-record-del {
+  font-size: 24rpx;
+  color: #e64340;
+}
+
+.tr-record-text {
+  font-size: 27rpx;
+  color: #34404f;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  display: block;
+}
+
+.tr-record-imgs {
+  margin-top: 14rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.tr-record-img {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 12rpx;
+}
+
+/* 记账标记：本次加分 */
+.tr-record-foot {
+  margin-top: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tr-record-score {
+  display: flex;
+}
+
+.tr-record-score-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #16a34a;
+  background: #e8f7ee;
+  border-radius: 999rpx;
+  padding: 6rpx 20rpx;
+}
+
+.score-pending {
+  color: #B8741A;
+  background: #FDF2E0;
+}
+
+/* 确认加分按钮 */
+.tr-confirm {
+  background: #185FA5;
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
+  flex-shrink: 0;
+}
+
+.tr-confirm-on {
+  background: #f2f4f7;
+}
+
+.tr-confirm-txt {
+  font-size: 21rpx;
+  color: #ffffff;
+}
+
+.tr-confirm-on .tr-confirm-txt {
+  color: #8a97a8;
+}
+
+/* 记录状态标签 */
+.tr-record-tags {
+  display: flex;
+  align-items: center;
+}
+
+.tr-tag {
+  font-size: 19rpx;
+  border-radius: 8rpx;
+  padding: 3rpx 12rpx;
+  margin-right: 12rpx;
+}
+
+.tr-tag-ok {
+  color: #ffffff;
+  background: #16a34a;
+}
+
+.tr-tag-pending {
+  color: #B8741A;
+  background: #FDF2E0;
+}
+
+/* 待确认记录：左侧琥珀色描边 */
+.tr-record-unconf {
+  border-left: 6rpx solid #F0A63C;
+  background: linear-gradient(96deg, #FFFBF2 0%, #FFFFFF 46%);
+}
+
+/* 任务头下方的状态条 */
+.tr-status {
+  display: flex;
+  margin: 18rpx 28rpx 0;
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 20rpx 0;
+  box-shadow: 0 6rpx 16rpx rgba(31, 45, 61, 0.05);
+}
+
+.tr-status-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tr-status-num {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.tr-status-pending {
+  color: #D9822B;
+}
+
+.tr-status-remain {
+  color: #185FA5;
+}
+
+.tr-status-label {
+  font-size: 20rpx;
+  color: #9aa6b5;
+  margin-top: 6rpx;
+}
+
+.tr-form-hint {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 20rpx;
+  color: #9aa6b5;
+  line-height: 1.6;
+}
+
+.tr-total-pending {
+  font-size: 20rpx;
+  color: #FFF0C9;
+  margin-left: 16rpx;
+}
+
+/* 记录末尾：累计加分标识 */
+.tr-total {
+  margin-top: 8rpx;
+  background: #185FA5;
+  border-radius: 18rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.tr-total-text {
+  font-size: 26rpx;
+  color: #fff;
+  opacity: 0.92;
+}
+
+.tr-total-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #FFD66B;
+  margin: 0 8rpx;
+}
+
+.tr-bottom-pad {
+  height: 30rpx;
+}
+
+/* ===== 分值表（结构化表格） ===== */
+.tr-table {
+  margin-top: 22rpx;
+  border: 2rpx solid #e2e8f0;
+  border-radius: 14rpx;
+  overflow: hidden;
+}
+
+.tr-table-cap {
+  display: block;
+  padding: 16rpx 18rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #185FA5;
+  background: #eef4fb;
+  border-bottom: 2rpx solid #e2e8f0;
+}
+
+.tr-table-grid {
+  background: #fff;
+}
+
+.tr-tr {
+  display: flex;
+  border-bottom: 1rpx solid #eef1f5;
+}
+
+.tr-tr:last-child {
+  border-bottom: none;
+}
+
+.tr-tr-head .tr-td {
+  background: #f5f7fa;
+  color: #1f2d3d;
+  font-weight: 700;
+}
+
+.tr-td {
+  flex: 1;
+  min-width: 0;
+  padding: 14rpx 8rpx;
+  font-size: 23rpx;
+  color: #34404f;
+  text-align: center;
+  line-height: 1.4;
+  border-right: 1rpx solid #eef1f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tr-td:last-child {
+  border-right: none;
+}
+
+.tr-td-first {
+  flex: 0 0 130rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+  text-align: left;
+  justify-content: flex-start;
+  background: #fafbfc;
+}
+
+.tr-tr-head .tr-td-first {
+  background: #f5f7fa;
+}

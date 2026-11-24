@@ -1,0 +1,9 @@
+{
+  "name": "course-schedule-building-nav",
+  "version": "1.0.0",
+  "description": "课程表工作台 + 教学楼内部三维导航（合并版）",
+  "main": "app.js",
+  "dependencies": {
+    "threejs-miniprogram": "^1.0.0"
+  }
+}

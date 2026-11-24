@@ -1,0 +1,105 @@
+/* pages/scene/scene.wxss */
+.scene-wrap {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.gl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.gl-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+  gap: 24rpx;
+}
+
+.gl-title {
+  font-size: 36rpx;
+  color: #f87171;
+  font-weight: 600;
+}
+
+.gl-text {
+  font-size: 26rpx;
+  color: #cbd5e1;
+  line-height: 1.8;
+  white-space: pre-line;
+  text-align: left;
+}
+
+/* 顶部 HUD */
+.hud-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 24rpx 28rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  background: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0));
+}
+
+.hud-loc { font-size: 26rpx; color: #93c5fd; }
+.hud-goal { font-size: 30rpx; color: #fff; font-weight: 600; }
+.hud-route { font-size: 24rpx; color: #67e8f9; }
+
+/* 准星 */
+.crosshair {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 16rpx; height: 16rpx;
+  margin: -8rpx 0 0 -8rpx;
+  border: 3rpx solid rgba(255,255,255,0.7);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 虚拟摇杆 */
+.joy-base {
+  position: absolute;
+  left: 40rpx; bottom: 60rpx;
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2rpx solid rgba(255,255,255,0.18);
+}
+
+.joy-knob {
+  position: absolute;
+  width: 60px; height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  background: rgba(96,165,250,0.85);
+  box-shadow: 0 0 16rpx rgba(96,165,250,0.6);
+}
+
+/* 底部按钮 */
+.hud-btns {
+  position: absolute;
+  right: 30rpx; bottom: 60rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.hb {
+  background: rgba(37,99,235,0.85);
+  color: #fff;
+  font-size: 26rpx;
+  padding: 14rpx 22rpx;
+  border-radius: 14rpx;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.hb::after { border: none; }

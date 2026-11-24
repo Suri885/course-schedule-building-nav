@@ -1,0 +1,400 @@
+<!--pages/index/index.wxml - 课表主页-->
+<view class="schedule-container">
+
+  <!-- 顶部周次选择器 -->
+  <view class="header">
+    <view class="week-nav">
+      <view class="week-arrow" bindtap="prevWeek">
+        <text class="arrow-icon">‹</text>
+      </view>
+      <view class="week-title">
+        <text class="week-text">第 {{currentWeek}} 周</text>
+        <text class="week-this" wx:if="{{weekIsThis}}">本周</text>
+        <text class="week-sub">/ 共 {{totalWeeks}} 周</text>
+      </view>
+      <view class="week-arrow" bindtap="nextWeek">
+        <text class="arrow-icon">›</text>
+      </view>
+    </view>
+
+    <!-- 右侧工具入口（提醒已拆为独立板块，入口在首页） -->
+    <view class="header-tools">
+      <view class="tool-btn" bindtap="goMemo">
+        <text class="tool-icon">📝</text>
+        <text class="tool-label">备忘</text>
+      </view>
+      <view class="tool-btn" bindtap="openSlotPanel">
+        <text class="tool-icon">⚙️</text>
+        <text class="tool-label">时段</text>
+      </view>
+      <view class="tool-btn" bindtap="openSmartPanel">
+        <view class="tool-icon-wrap">
+          <text class="tool-icon">💡</text>
+          <text class="tool-badge" wx:if="{{conflictCount > 0}}">{{conflictCount}}</text>
+        </view>
+        <text class="tool-label">智能</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 滑动切换周提示 -->
+  <view class="swipe-hint">
+    <text wx:if="{{weekIsThis}}">今日已置顶 · 左右滑动切换周</text>
+    <text wx:else>← 左右滑动屏幕切换上一周 / 下一周 →</text>
+  </view>
+
+  <!-- ===================== 7天卡片纵向列表 ===================== -->
+  <scroll-view scroll-y class="day-list-scroll" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+
+    <!-- ===== 本周空闲时间：周视图顶层一行，点开展开这一周的 7 天空闲 ===== -->
+    <view class="free-bar {{freeOpen ? 'free-bar-open' : ''}}">
+      <view class="free-bar-head" bindtap="toggleFree">
+        <text class="free-bar-icon">🗓</text>
+        <view class="free-bar-texts">
+          <view class="free-bar-title-row">
+            <text class="free-bar-title">第 {{currentWeek}} 周空闲时间</text>
+            <text class="week-this" wx:if="{{weekIsThis}}">本周</text>
+          </view>
+          <text class="free-bar-sum">{{freeSummary}}</text>
+        </view>
+        <text class="free-bar-toggle">{{freeOpen ? '收起 ⌃' : '查看一周 ›'}}</text>
+      </view>
+
+      <view class="free-week" wx:if="{{freeOpen}}">
+        <view
+          class="free-day {{fd.day === todayDay && weekIsThis ? 'free-day-today' : ''}}"
+          wx:for="{{freeDays}}"
+          wx:for-item="fd"
+          wx:key="day"
+        >
+          <view class="free-day-head">
+            <text class="free-day-label">周{{fd.label}}</text>
+            <text class="free-day-total {{fd.empty ? 'free-day-total-none' : ''}}">{{fd.totalStr}}</text>
+          </view>
+          <view class="free-gaps">
+            <view
+              class="free-gap"
+              wx:for="{{fd.gaps}}"
+              wx:for-item="g"
+              wx:key="start"
+              data-day="{{fd.day}}"
+              data-start="{{g.startStr}}"
+              data-end="{{g.endStr}}"
+              catchtap="onFreeGapTap"
+            >
+              <text class="free-gap-time">{{g.startStr}}-{{g.endStr}}</text>
+              <text class="free-gap-dur">{{g.durStr}}</text>
+            </view>
+          </view>
+        </view>
+        <text class="free-foot">按 8:00-22:00 统计，只列 ≥45 分钟的整段空闲；点时间段可直接填入事项</text>
+      </view>
+    </view>
+
+    <!-- 空周提示 -->
+    <view class="week-empty" wx:if="{{weekAllEmpty}}">
+      <text class="week-empty-emoji">📅</text>
+      <text class="week-empty-text">本周还没有安排</text>
+      <text class="week-empty-sub">点击右下 ＋ 添加课程或活动</text>
+    </view>
+
+    <!-- 每天一张卡片 -->
+    <view
+      class="day-card {{day.today ? 'day-card-today' : ''}}"
+      wx:for="{{dayList}}"
+      wx:for-item="day"
+      wx:key="day"
+    >
+      <!-- 卡片头：星期 + 日期 + 今天标记 + 当天快捷加号 -->
+      <view class="day-card-header">
+        <view class="day-card-info">
+          <text class="day-card-label">周{{day.label}}</text>
+          <text class="day-card-date" wx:if="{{day.date}}">{{day.date}}</text>
+          <text class="day-card-today-tag" wx:if="{{day.today}}">今天</text>
+        </view>
+        <view class="day-add" data-day="{{day.day}}" catchtap="onDayAdd">
+          <text class="day-add-icon">＋</text>
+          <text class="day-add-txt">添加当天事项</text>
+        </view>
+      </view>
+
+      <!-- 有安排：事项块列表 -->
+      <view class="day-card-body" wx:if="{{!day.empty}}">
+        <view
+          wx:for="{{day.items}}"
+          wx:for-item="item"
+          wx:key="key"
+          class="schedule-block color-{{item.color}} {{item.type === 'event' ? 'block-event' : ''}} {{item.type === 'memo' ? 'block-memo' : ''}} {{item.conflict ? 'block-conflict' : ''}}"
+          data-item="{{item}}"
+          catchtap="onBlockTap"
+          catchlongpress="onBlockLongPress"
+        >
+          <!-- 冲突标记 -->
+          <view class="block-conflict-tag" wx:if="{{item.conflict}}">⚠ 冲突：{{item.conflictText}}</view>
+
+          <!-- 第一行：名称 + 开始时间 -->
+          <view class="block-row1">
+            <text class="block-name">{{item.type === 'event' ? (item.kindIcon + ' ') : ''}}{{item.type === 'memo' ? '🗒 ' : ''}}{{item.name || item.content}}</text>
+            <text class="block-time-start" wx:if="{{item.startTime}}">{{item.startTime}}</text>
+          </view>
+          <!-- 第二行：时段 + 完整时间 + 地点 -->
+          <view class="block-row2" wx:if="{{item.timeLabel || item.location || item.place}}">
+            <text class="block-info" wx:if="{{item.periodLabel}}">{{item.periodLabel}} · </text>
+            <text class="block-info" wx:if="{{item.timeLabel}}">{{item.timeLabel}}</text>
+            <text class="block-info" wx:if="{{item.location}}"> · @{{item.location}}</text>
+            <text class="block-info" wx:if="{{item.place}}"> · 📍{{item.place}}</text>
+          </view>
+          <!-- 第三行：教师 + 备注 -->
+          <view class="block-row3" wx:if="{{item.teacher || item.note}}">
+            <text class="block-sub" wx:if="{{item.teacher}}">{{item.teacher}}</text>
+            <text class="block-sub" wx:if="{{item.teacher && item.note}}"> · </text>
+            <text class="block-sub" wx:if="{{item.note}}">📌 {{item.note}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 没安排 -->
+      <view class="day-card-empty" wx:if="{{day.empty}}">
+        <text class="day-card-empty-text">这天没有安排</text>
+      </view>
+    </view>
+
+    <!-- 底部留白给悬浮按钮 -->
+    <view class="day-list-bottom-pad"></view>
+  </scroll-view>
+
+  <!-- 悬浮添加按钮 -->
+  <view class="fab-btn" bindtap="onFabTap">
+    <text class="fab-icon">+</text>
+  </view>
+
+  <!-- 时段管理面板 -->
+  <view class="slot-mask" wx:if="{{showSlotPanel}}" bindtap="closeSlotPanel">
+    <view class="slot-panel" catchtap="noop">
+      <view class="slot-panel-title-bar">
+        <text class="slot-panel-title">时段设置</text>
+        <view class="slot-panel-close" bindtap="closeSlotPanel">
+          <text class="slot-panel-close-text">✕</text>
+        </view>
+      </view>
+
+      <scroll-view scroll-y class="slot-panel-body">
+
+      <text class="slot-panel-tip">点击时段名称可改名，点击时间可调整。底部可添加自定义时段（如午间答疑、晚自习）。</text>
+
+      <view class="slot-manage-list">
+        <view class="slot-manage-row" wx:for="{{slotList}}" wx:key="period">
+          <view class="slot-manage-label-wrap" data-period="{{item.period}}" bindtap="editSlotLabel">
+            <text class="slot-manage-label">{{item.label}}</text>
+            <text class="slot-edit-pencil">✏</text>
+          </view>
+          <picker mode="time" value="{{item.start}}" data-period="{{item.period}}" bindchange="onSlotStartChange">
+            <view class="slot-time-pick-mini"><text>{{item.start}}</text></view>
+          </picker>
+          <text class="slot-time-sep-mini">-</text>
+          <picker mode="time" value="{{item.end}}" data-period="{{item.period}}" bindchange="onSlotEndChange">
+            <view class="slot-time-pick-mini"><text>{{item.end}}</text></view>
+          </picker>
+          <view class="slot-manage-del" wx:if="{{item.custom}}" data-period="{{item.period}}" bindtap="removeCustomSlot">
+            <text class="slot-manage-del-text">删除</text>
+          </view>
+        </view>
+      </view>
+
+      </scroll-view>
+
+      <view class="slot-add-area">
+        <text class="slot-add-title">添加自定义时段</text>
+
+        <view class="slot-add-field" bindtap="inputNewSlotLabel">
+          <text class="slot-add-field-label">名称</text>
+          <text class="slot-add-field-value {{newSlotLabel ? '' : 'placeholder'}}">{{newSlotLabel || '点击输入'}}</text>
+        </view>
+
+        <view class="slot-add-time-row">
+          <picker mode="time" value="{{newSlotStart}}" bindchange="onNewSlotStart">
+            <view class="slot-time-pick"><text class="slot-time-pick-text">{{newSlotStart}}</text></view>
+          </picker>
+          <text class="slot-time-sep">至</text>
+          <picker mode="time" value="{{newSlotEnd}}" bindchange="onNewSlotEnd">
+            <view class="slot-time-pick"><text class="slot-time-pick-text">{{newSlotEnd}}</text></view>
+          </picker>
+        </view>
+
+        <view class="slot-add-days">
+          <text class="slot-add-field-label">星期</text>
+          <view class="day-toggles">
+            <view
+              wx:for="{{dayToggleList}}"
+              wx:key="day"
+              class="day-toggle {{item.on ? 'on' : ''}}"
+              data-day="{{item.day}}"
+              catchtap="toggleNewSlotDay"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="slot-add-time-row">
+          <text class="slot-add-field-label">周次</text>
+          <picker mode="selector" range="{{weekOptions}}" value="{{newSlotWeekStart}}" bindchange="onNewSlotWeekStart">
+            <view class="slot-week-pick"><text>第{{weekOptions[newSlotWeekStart]}}周</text></view>
+          </picker>
+          <text class="slot-time-sep">至</text>
+          <picker mode="selector" range="{{weekOptions}}" value="{{newSlotWeekEnd}}" bindchange="onNewSlotWeekEnd">
+            <view class="slot-week-pick"><text>第{{weekOptions[newSlotWeekEnd]}}周</text></view>
+          </picker>
+        </view>
+
+        <view class="slot-add-btn" bindtap="addCustomSlot">
+          <text class="slot-add-btn-text">＋ 添加时段</text>
+        </view>
+
+        <view class="slot-reset-btn" bindtap="resetDefaultSlots">
+          <text class="slot-reset-btn-text">↺ 恢复北化大默认时段</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加活动面板 -->
+  <view class="slot-mask" wx:if="{{showEventPanel}}" bindtap="closeEventPanel">
+    <view class="slot-panel event-panel" catchtap="noop">
+      <view class="slot-panel-title-bar">
+        <text class="slot-panel-title">添加当天事项</text>
+        <view class="slot-panel-close" bindtap="closeEventPanel">
+          <text class="slot-panel-close-text">✕</text>
+        </view>
+      </view>
+
+      <scroll-view scroll-y class="slot-panel-body">
+        <text class="slot-panel-tip">记当天的课程、会议、讲座等单次安排，可按时段或按节次填写。需要整学期每周重复的课程，请用右下角总加号「批量添加课程」。</text>
+
+        <!-- 实时冲突提示 -->
+        <view class="ev-conflict-banner" wx:if="{{evConflicts.length > 0}}">
+          <text class="ev-conflict-title">⚠ 与已有安排冲突</text>
+          <text class="ev-conflict-item" wx:for="{{evConflicts}}" wx:for-item="cf" wx:key="key">{{cf.detail}}</text>
+        </view>
+
+        <!-- 目标日期 -->
+        <view class="ev-date-bar">
+          <text class="ev-date-txt">📅 {{evDayText}} · 第 {{evWeek}} 周</text>
+        </view>
+
+        <!-- 类型：课程 / 会议 / 讲座 / 其他 -->
+        <view class="ev-kind-row">
+          <view class="ev-kind {{evKind === 'course' ? 'ev-kind-on' : ''}}" data-kind="course" catchtap="onEvKind">📚 课程</view>
+          <view class="ev-kind {{evKind === 'meeting' ? 'ev-kind-on' : ''}}" data-kind="meeting" catchtap="onEvKind">👥 会议</view>
+          <view class="ev-kind {{evKind === 'lecture' ? 'ev-kind-on' : ''}}" data-kind="lecture" catchtap="onEvKind">🎤 讲座</view>
+          <view class="ev-kind {{evKind === 'other' ? 'ev-kind-on' : ''}}" data-kind="other" catchtap="onEvKind">📌 其他</view>
+        </view>
+
+        <view class="slot-add-field" bindtap="inputEvName">
+          <text class="slot-add-field-label">名称</text>
+          <text class="slot-add-field-value {{evName ? '' : 'placeholder'}}">{{evName || '点击输入'}}</text>
+        </view>
+
+        <!-- 时间方式 -->
+        <view class="ev-mode-row">
+          <view class="ev-mode {{evTimeMode === 'slot' ? 'ev-mode-on' : ''}}" data-mode="slot" catchtap="onEvTimeMode">按节次</view>
+          <view class="ev-mode {{evTimeMode === 'time' ? 'ev-mode-on' : ''}}" data-mode="time" catchtap="onEvTimeMode">按时间</view>
+        </view>
+
+        <view class="slot-add-time-row" wx:if="{{evTimeMode === 'slot'}}">
+          <picker mode="selector" range="{{evSlotLabels}}" value="{{evStartPeriodIdx}}" bindchange="onEvStartSlot">
+            <view class="slot-week-pick"><text>{{evSlotLabels[evStartPeriodIdx]}}</text></view>
+          </picker>
+          <text class="slot-time-sep">至</text>
+          <picker mode="selector" range="{{evSlotLabels}}" value="{{evEndPeriodIdx}}" bindchange="onEvEndSlot">
+            <view class="slot-week-pick"><text>{{evSlotLabels[evEndPeriodIdx]}}</text></view>
+          </picker>
+        </view>
+
+        <view class="slot-add-time-row" wx:else>
+          <picker mode="time" value="{{evStart}}" bindchange="onEvStart">
+            <view class="slot-time-pick"><text class="slot-time-pick-text">{{evStart}}</text></view>
+          </picker>
+          <text class="slot-time-sep">至</text>
+          <picker mode="time" value="{{evEnd}}" bindchange="onEvEnd">
+            <view class="slot-time-pick"><text class="slot-time-pick-text">{{evEnd}}</text></view>
+          </picker>
+        </view>
+
+        <view class="slot-add-time-row">
+          <text class="slot-add-field-label">周次</text>
+          <picker mode="selector" range="{{weekOptions}}" value="{{evWeek - 1}}" bindchange="onEvWeek">
+            <view class="slot-week-pick"><text>第{{evWeek}}周</text></view>
+          </picker>
+          <text class="slot-add-field-label">星期</text>
+          <picker mode="selector" range="{{dayOptions}}" value="{{evDay - 1}}" bindchange="onEvDay">
+            <view class="slot-week-pick"><text>周{{dayOptions[evDay - 1]}}</text></view>
+          </picker>
+        </view>
+
+        <view class="slot-add-field" bindtap="inputEvPlace">
+          <text class="slot-add-field-label">地点</text>
+          <text class="slot-add-field-value {{evPlace ? '' : 'placeholder'}}">{{evPlace || '点击输入(可不填)'}}</text>
+        </view>
+
+        <view class="slot-add-field" bindtap="inputEvNote">
+          <text class="slot-add-field-label">备注</text>
+          <text class="slot-add-field-value {{evNote ? '' : 'placeholder'}}">{{evNote || '点击输入(可不填)'}}</text>
+        </view>
+      </scroll-view>
+
+      <view class="slot-add-area">
+        <view class="slot-add-btn" bindtap="addEvent">
+          <text class="slot-add-btn-text">＋ 加到当天</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 智能面板：整周空闲分析 + 个性化推荐 -->
+  <view class="slot-mask" wx:if="{{smartOpen}}" bindtap="closeSmartPanel">
+    <view class="slot-panel smart-panel" catchtap="noop">
+      <view class="slot-panel-title-bar">
+        <text class="slot-panel-title">智能排课建议</text>
+        <view class="slot-panel-close" bindtap="closeSmartPanel">
+          <text class="slot-panel-close-text">✕</text>
+        </view>
+      </view>
+
+      <scroll-view scroll-y class="slot-panel-body">
+        <text class="slot-panel-tip">分析本周每天的空闲时段，帮你在「不撞课」的位置安排自习 / 开会 / 讲座。点一个空闲时段即可带入添加活动面板。</text>
+
+        <!-- 个性化推荐 -->
+        <view class="smart-recs" wx:if="{{smartRecs.length > 0}}">
+          <view class="smart-rec" wx:for="{{smartRecs}}" wx:for-item="r" wx:key="text">
+            <text class="smart-rec-icon">{{r.icon}}</text>
+            <text class="smart-rec-text">{{r.text}}</text>
+          </view>
+        </view>
+
+        <!-- 每天空闲时段 -->
+        <view class="smart-day" wx:for="{{smartDays}}" wx:for-item="sd" wx:key="day">
+          <view class="smart-day-head">
+            <text class="smart-day-label">周{{sd.label}}</text>
+          </view>
+          <view wx:if="{{sd.gaps.length === 0}}" class="smart-day-empty">
+            <text class="smart-day-empty-text">当天排得很满，暂无大段空闲</text>
+          </view>
+          <view
+            wx:for="{{sd.gaps}}"
+            wx:for-item="g"
+            wx:key="start"
+            class="smart-gap"
+            data-day="{{sd.day}}"
+            data-start="{{g.startStr}}"
+            data-end="{{g.endStr}}"
+            bindtap="onSmartGapTap"
+          >
+            <text class="smart-gap-time">{{g.startStr}} - {{g.endStr}}</text>
+            <text class="smart-gap-dur">{{g.durStr}} 空闲</text>
+            <text class="smart-gap-add">＋填入</text>
+          </view>
+        </view>
+
+      </scroll-view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,108 @@
+<!--pages/home/home.wxml - 工作台：红色紧急提醒置顶 + 三块入口-->
+<view class="home-bg">
+
+  <!-- ===== 置顶：已确认且倒计时变红的事务（红色条框） ===== -->
+  <view class="urgent-home" wx:if="{{urgentTasks.length > 0}}" bindtap="goRemind">
+    <view class="urgent-home-head">
+      <text class="urgent-home-title">⏰ 紧急提醒</text>
+      <text class="urgent-home-link">去处理 ›</text>
+    </view>
+    <view class="urgent-home-item" wx:for="{{urgentTasks}}" wx:for-item="u" wx:key="id">
+      <view class="urgent-home-dot"></view>
+      <text class="urgent-home-name">{{u.title}}</text>
+      <text class="urgent-home-left">{{u.leftText}}</text>
+      <text class="urgent-home-deadline" wx:if="{{u.hasDeadline}}">{{u.deadlineText}}</text>
+    </view>
+    <text class="urgent-home-more" wx:if="{{urgentMore > 0}}">还有 {{urgentMore}} 项…</text>
+  </view>
+
+  <!-- ===== 手动置顶的事务（非红色，靛蓝条框） ===== -->
+  <view class="pinned-home" wx:if="{{pinnedTasks.length > 0}}" bindtap="goRemind">
+    <view class="pinned-home-head">
+      <text class="pinned-home-title">📌 置顶事项</text>
+      <text class="pinned-home-link">去处理 ›</text>
+    </view>
+    <view class="pinned-home-item" wx:for="{{pinnedTasks}}" wx:for-item="p" wx:key="id">
+      <view class="pinned-home-dot"></view>
+      <text class="pinned-home-name">{{p.title}}</text>
+      <text class="pinned-home-left">{{p.fixed ? '长期' : p.leftText}}</text>
+    </view>
+    <text class="pinned-home-more" wx:if="{{pinnedMore > 0}}">还有 {{pinnedMore}} 项…</text>
+  </view>
+
+  <view class="home-header">
+    <text class="home-title">北化人工作台</text>
+    <text class="home-sub">日程与成长，一屏掌握</text>
+  </view>
+
+  <!-- 并排两张卡片 -->
+  <view class="card-row">
+    <view class="home-card card-schedule" bindtap="goSchedule">
+      <view class="card-icon">📅</view>
+      <text class="card-name">日程表</text>
+      <text class="card-desc">课程 · 活动 · 备忘</text>
+    </view>
+
+    <view class="home-card card-second" bindtap="goSecondClass">
+      <view class="card-icon">🎓</view>
+      <text class="card-name">第二课堂</text>
+      <text class="card-desc">德智体美劳</text>
+      <view class="card-progress">
+        <view class="card-progress-bar" style="width: {{totalMax ? (totalGot / totalMax * 100) : 0}}%;"></view>
+      </view>
+      <text class="card-progress-text">已得 {{totalGot}} / {{totalMax}} 分 · 还差 {{totalRemain}}</text>
+    </view>
+  </view>
+
+  <!-- 提醒：独立板块入口 -->
+  <view class="home-card card-remind" bindtap="goRemind">
+    <view class="remind-left">
+      <view class="card-icon remind-icon">⏰</view>
+      <view class="remind-text">
+        <text class="card-name">提醒</text>
+        <text class="card-desc">已确认 {{remindPending}} 项待完成<text wx:if="{{remindUnconfirmed > 0}}"> · {{remindUnconfirmed}} 项待确认</text></text>
+      </view>
+    </view>
+    <view class="remind-right">
+      <view class="remind-badge" wx:if="{{urgentTasks.length > 0}}">红色 {{urgentTasks.length}}</view>
+      <text class="remind-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 错题与背诵：独立模块入口 -->
+  <view class="home-card card-review" bindtap="goReview">
+    <view class="remind-left">
+      <view class="card-icon remind-icon">🧠</view>
+      <view class="remind-text">
+        <text class="card-name">错题与背诵</text>
+        <text class="card-desc">艾宾浩斯复习 · 资料库 {{reviewTotal}} 份</text>
+      </view>
+    </view>
+    <view class="remind-right">
+      <view class="review-badge" wx:if="{{reviewDue > 0}}">今日 {{reviewDue}}</view>
+      <text class="remind-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 教学楼内部导航：独立入口 -->
+  <view class="home-card card-nav" bindtap="goBuildingNav">
+    <view class="remind-left">
+      <view class="card-icon remind-icon">🧭</view>
+      <view class="remind-text">
+        <text class="card-name">教学楼内部导航</text>
+        <text class="card-desc">选入口 · 查教室 · 三维路线</text>
+      </view>
+    </view>
+    <view class="remind-right">
+      <text class="remind-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="home-tip">
+    <text class="home-tip-text">提醒事务按剩余天数显示红 / 黄 / 绿三色（默认一周红、两周黄、一个月绿，可在提醒页自定义）。倒计时变红的已确认事务会自动置顶到本页。</text>
+  </view>
+
+  <view class="home-tip">
+    <text class="home-tip-text">第二课堂按办法满分 600 分计算进度：道德与思想 180 · 学术与创新 120 · 体育 100 · 美学 100 · 劳动 100。各板块内外累计超出满分的部分不重复计入。</text>
+  </view>
+</view>

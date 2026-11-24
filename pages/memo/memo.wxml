@@ -1,0 +1,124 @@
+<!--pages/memo/memo.wxml - 备忘录：大输入框 + 图片-->
+<view class="memo-container">
+
+  <!-- ===== 编辑 / 新增卡片 ===== -->
+  <view class="composer">
+    <view class="composer-head">
+      <text class="composer-title">{{editingId ? '编辑备忘' : '写备忘'}}</text>
+      <text class="composer-cancel" wx:if="{{editingId}}" bindtap="cancelEdit">取消编辑</text>
+    </view>
+
+    <textarea
+      class="composer-input"
+      value="{{content}}"
+      bindinput="onContentInput"
+      placeholder="随手记点什么…  一段想法、一个号码、一件小事，也可以插张图"
+      placeholder-class="composer-ph"
+      maxlength="1000"
+      auto-height
+      cursor-spacing="30"
+      show-confirm-bar="{{false}}"
+    />
+
+    <view class="composer-images" wx:if="{{images.length > 0}}">
+      <view class="img-cell" wx:for="{{images}}" wx:key="*this">
+        <image class="img-thumb" src="{{item}}" mode="aspectFill" data-src="{{item}}" catchtap="previewImage" />
+        <view class="img-del" data-index="{{index}}" catchtap="removeImage">
+          <text class="img-del-txt">✕</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="composer-foot">
+      <view class="img-add" bindtap="chooseImages">
+        <text class="img-add-icon">🖼</text>
+        <text class="img-add-txt">插入图片</text>
+      </view>
+      <view class="composer-save" bindtap="saveMemo">
+        <text class="composer-save-txt">{{editingId ? '保存修改' : '保存'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 列表 ===== -->
+  <view class="memo-count" wx:if="{{memoCount > 0}}">
+    <text class="memo-count-txt">共 {{memoCount}} 条备忘 · 点条目编辑，长按删除</text>
+  </view>
+
+  <view class="memo-list" wx:if="{{memoCount > 0}}">
+    <view
+      class="memo-card"
+      wx:for="{{memos}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="startEdit"
+      bindlongpress="deleteMemo"
+    >
+      <text class="memo-text" wx:if="{{item.content}}">{{item.content}}</text>
+
+      <view class="memo-images" wx:if="{{item.images.length > 0}}">
+        <image
+          wx:for="{{item.images}}"
+          wx:for-item="img"
+          wx:key="*this"
+          class="memo-img"
+          src="{{img}}"
+          mode="aspectFill"
+          data-src="{{img}}"
+          catchtap="previewImage"
+        />
+      </view>
+
+      <view class="memo-meta">
+        <text class="memo-time">{{item.timeText}}</text>
+        <view class="memo-link {{item.linkText ? 'memo-link-on' : ''}}" data-id="{{item.id}}" catchtap="openLinkPanel">
+          <text class="memo-link-txt">{{item.linkText ? '📅 ' + item.linkText : '📅 贴到课表'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="memo-empty" wx:else>
+    <text class="memo-empty-icon">🗒️</text>
+    <text class="memo-empty-text">还没有备忘，在上面写一条吧</text>
+    <text class="memo-empty-sub">支持插入图片，纯记录不勾选、不做待办</text>
+  </view>
+
+  <view class="memo-bottom-pad"></view>
+
+  <!-- ===== 贴到课表弹层 ===== -->
+  <view class="link-mask" wx:if="{{showLinkPanel}}" bindtap="closeLinkPanel">
+    <view class="link-panel" catchtap="noop">
+      <view class="link-panel-title-bar">
+        <text class="link-panel-title">贴到课表时段</text>
+        <view class="link-panel-close" bindtap="closeLinkPanel">
+          <text class="link-panel-close-text">✕</text>
+        </view>
+      </view>
+      <text class="link-preview">「{{linkingPreview}}」</text>
+
+      <picker mode="selector" range="{{dayLabels}}" value="{{linkDayIndex}}" bindchange="onLinkDayChange">
+        <view class="link-picker-row">
+          <text class="link-picker-label">星期</text>
+          <text class="link-picker-value">{{dayLabels[linkDayIndex]}} ›</text>
+        </view>
+      </picker>
+      <picker mode="selector" range="{{slotLabels}}" value="{{linkSlotIndex}}" bindchange="onLinkSlotChange">
+        <view class="link-picker-row">
+          <text class="link-picker-label">时段</text>
+          <text class="link-picker-value">{{slotLabels[linkSlotIndex]}} ›</text>
+        </view>
+      </picker>
+
+      <view class="link-actions">
+        <view class="link-btn-unlink" bindtap="unlinkMemo">
+          <text class="link-btn-unlink-text">从课表移除</text>
+        </view>
+        <view class="link-btn-save" bindtap="saveLink">
+          <text class="link-btn-save-text">贴上去</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+</view>

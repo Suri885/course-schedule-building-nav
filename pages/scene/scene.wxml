@@ -1,0 +1,42 @@
+<!-- pages/scene/scene.wxml -->
+<view
+  class="scene-wrap"
+  bindtouchstart="onTouchStart"
+  bindtouchmove="onTouchMove"
+  bindtouchend="onTouchEnd"
+  bindtouchcancel="onTouchEnd">
+  <!-- 降级提示：未构建 threejs-miniprogram 时显示 -->
+  <view wx:if="{{!webglReady}}" class="gl-fallback">
+    <text class="gl-title">3D 渲染未启用</text>
+    <text class="gl-text">本页使用 threejs-miniprogram 渲染三维场景。请在开发者工具中：\n1) 终端执行 npm install threejs-miniprogram\n2) 工具菜单「构建 npm」\n3) 重新编译后即可看到第一人称楼内场景。</text>
+  </view>
+
+  <!-- WebGL 画布 -->
+  <canvas
+    wx:if="{{webglReady}}"
+    type="webgl"
+    id="gl"
+    class="gl-canvas"></canvas>
+
+  <!-- 顶部 HUD -->
+  <view wx:if="{{webglReady}}" class="hud-top">
+    <view class="hud-loc">当前入口：{{locLabel}}</view>
+    <view wx:if="{{goalText}}" class="hud-goal">{{goalText}}</view>
+    <view wx:if="{{routeText}}" class="hud-route">{{routeText}}</view>
+  </view>
+
+  <!-- 准星 -->
+  <view wx:if="{{webglReady}}" class="crosshair"></view>
+
+  <!-- 虚拟摇杆（左下） -->
+  <view wx:if="{{webglReady}}" class="joy-base">
+    <view class="joy-knob" style="left:{{joyX}}px; top:{{joyY}}px;"></view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view wx:if="{{webglReady}}" class="hud-btns">
+    <button class="hb" bindtap="onSearch">🔍 查教室</button>
+    <button class="hb" bindtap="onClearRoute">✕ 清路线</button>
+    <button class="hb" bindtap="onExit">⏏ 退出</button>
+  </view>
+</view>

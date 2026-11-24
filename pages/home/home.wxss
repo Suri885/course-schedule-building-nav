@@ -1,0 +1,331 @@
+/* pages/home/home.wxss - 首页样式 */
+.home-bg {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #eaf1fb 0%, #f4f7fc 55%, #eef3fb 100%);
+  padding: 48rpx 40rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.home-header {
+  margin-bottom: 56rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-title {
+  font-size: 46rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+  letter-spacing: 1rpx;
+}
+
+.home-sub {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #8a97a8;
+}
+
+/* 两张卡片并排 */
+.card-row {
+  display: flex;
+  gap: 32rpx;
+}
+
+.home-card {
+  flex: 1;
+  border-radius: 28rpx;
+  padding: 40rpx 32rpx;
+  min-height: 300rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 12rpx 30rpx rgba(31, 45, 61, 0.10);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-schedule {
+  background: linear-gradient(150deg, #4F86C6 0%, #185FA5 100%);
+}
+
+.card-second {
+  background: linear-gradient(150deg, #7C9CDF 0%, #5B6FD6 100%);
+}
+
+.card-icon {
+  font-size: 64rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-name {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.card-desc {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.card-progress {
+  margin-top: auto;
+  width: 100%;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.card-progress-bar {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #FFD66B;
+  transition: width 0.3s ease;
+}
+
+.card-progress-text {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.home-tip {
+  margin-top: 48rpx;
+  padding: 28rpx 32rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 20rpx rgba(31, 45, 61, 0.06);
+}
+
+.home-tip-text {
+  font-size: 23rpx;
+  color: #97a3b3;
+  line-height: 1.7;
+}
+
+/* ===== 置顶：红色紧急提醒条框 ===== */
+.urgent-home {
+  background: linear-gradient(150deg, #FDECEC 0%, #FBE0E0 100%);
+  border: 2rpx solid #F2B8B8;
+  border-radius: 22rpx;
+  padding: 24rpx 26rpx;
+  margin-bottom: 36rpx;
+  box-shadow: 0 10rpx 24rpx rgba(229, 72, 77, 0.14);
+}
+
+.urgent-home-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.urgent-home-title {
+  font-size: 27rpx;
+  font-weight: 700;
+  color: #C0393D;
+}
+
+.urgent-home-link {
+  font-size: 21rpx;
+  color: #C0393D;
+}
+
+.urgent-home-item {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+  border-top: 2rpx solid rgba(229, 72, 77, 0.12);
+}
+
+.urgent-home-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #E5484D;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+
+.urgent-home-name {
+  flex: 1;
+  font-size: 25rpx;
+  font-weight: 600;
+  color: #4A2B2C;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.urgent-home-left {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #D93A3F;
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+
+.urgent-home-deadline {
+  font-size: 20rpx;
+  color: #A85457;
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+
+.urgent-home-more {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #A85457;
+}
+
+/* ===== 提醒独立入口卡片 ===== */
+.card-remind {
+  margin-top: 32rpx;
+  min-height: 0;
+  padding: 30rpx;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #64748B 0%, #475569 100%);
+}
+
+.remind-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.remind-icon {
+  font-size: 46rpx;
+  margin-bottom: 0;
+  margin-right: 22rpx;
+}
+
+.remind-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.remind-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.remind-badge {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 999rpx;
+  padding: 6rpx 18rpx;
+}
+
+.remind-badge {
+  font-size: 20rpx;
+  color: #ffffff;
+}
+
+.remind-arrow {
+  font-size: 38rpx;
+  color: rgba(255, 255, 255, 0.75);
+  margin-left: 14rpx;
+}
+
+/* ===== 手动置顶的事项（靛蓝条框） ===== */
+.pinned-home {
+  background: linear-gradient(150deg, #F1F1FE 0%, #E7E7FD 100%);
+  border: 2rpx solid #C7C9F7;
+  border-radius: 22rpx;
+  padding: 24rpx 26rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 10rpx 24rpx rgba(79, 70, 229, 0.12);
+}
+
+.pinned-home-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.pinned-home-title {
+  font-size: 27rpx;
+  font-weight: 700;
+  color: #4F46E5;
+}
+
+.pinned-home-link {
+  font-size: 21rpx;
+  color: #4F46E5;
+}
+
+.pinned-home-item {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+  border-top: 2rpx solid rgba(79, 70, 229, 0.12);
+}
+
+.pinned-home-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #4F46E5;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+
+.pinned-home-name {
+  flex: 1;
+  font-size: 25rpx;
+  font-weight: 600;
+  color: #2E2A5C;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pinned-home-left {
+  font-size: 22rpx;
+  color: #4F46E5;
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+
+.pinned-home-more {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #6C68B8;
+}
+
+/* ===== 错题与背诵入口 ===== */
+.card-review {
+  margin-top: 24rpx;
+  min-height: 0;
+  padding: 30rpx;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #2E9E8F 0%, #1F7F6E 100%);
+}
+
+.review-badge {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 999rpx;
+  padding: 6rpx 18rpx;
+  font-size: 20rpx;
+  color: #ffffff;
+}
+
+/* ===== 教学楼内部导航入口 ===== */
+.card-nav {
+  margin-top: 24rpx;
+  min-height: 0;
+  padding: 30rpx;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
+}
